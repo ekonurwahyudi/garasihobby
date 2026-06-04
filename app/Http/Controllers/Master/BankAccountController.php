@@ -11,6 +11,7 @@ use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Str;
 use Illuminate\Validation\ValidationException;
 use Illuminate\View\View;
 
@@ -60,16 +61,23 @@ class BankAccountController extends Controller
     {
         $movements = collect();
 
-        FinanceTransaction::with('item.category')->where('bank_account_id', $bank_account->id)->get()
+        FinanceTransaction::with('item.category')
+            ->where('bank_account_id', $bank_account->id)
+            ->where('status', 'disetujui')
+            ->get()
             ->each(function ($transaction) use ($movements) {
-                $isIncome = $transaction->item->category->type === 'income';
+                $activity = $transaction->activity ?: $transaction->description;
+                $source = Str::startsWith($activity, 'Pembelian Material')
+                    ? 'Pembelian Material'
+                    : (Str::startsWith($activity, 'Pembayaran Order') ? 'Pembayaran Order' : 'Input Keuangan');
                 $movements->push([
                     'date' => $transaction->transaction_date,
                     'reference' => $transaction->transaction_number,
-                    'source' => 'Input Keuangan',
-                    'description' => $transaction->description,
-                    'type' => $isIncome ? 'income' : 'expense',
+                    'source' => $source,
+                    'description' => $activity,
+                    'type' => $transaction->transaction_type,
                     'amount' => (float) $transaction->amount,
+                    'action_url' => route('finance-transactions.show', $transaction),
                 ]);
             });
 
@@ -86,18 +94,14 @@ class BankAccountController extends Controller
                     'description' => ($isIncome ? 'Transfer dari ' : 'Transfer ke ') . ($other?->bank_name ?? '-'),
                     'type' => $isIncome ? 'income' : 'expense',
                     'amount' => (float) $transfer->amount,
+                    'action_url' => null,
                 ]);
             });
 
-        BankBalanceAdjustment::where('bank_account_id', $bank_account->id)->get()
-            ->each(fn ($adjustment) => $movements->push([
-                'date' => $adjustment->created_at,
-                'reference' => 'ADJ-' . str_pad($adjustment->id, 6, '0', STR_PAD_LEFT),
-                'source' => 'Penyesuaian Saldo',
-                'description' => $adjustment->description,
-                'type' => $adjustment->type === 'increase' ? 'income' : 'expense',
-                'amount' => (float) $adjustment->difference,
-            ]));
+        $adjustments = BankBalanceAdjustment::with('creator')
+            ->where('bank_account_id', $bank_account->id)
+            ->latest()
+            ->get();
 
         $runningBalance = (float) $bank_account->opening_balance;
         $movements = $movements->sortBy('date')->values()->map(function ($movement) use (&$runningBalance) {
@@ -106,7 +110,7 @@ class BankAccountController extends Controller
             return $movement;
         })->sortByDesc('date')->values();
 
-        return view('master.bank-accounts.show', compact('bank_account', 'movements'));
+        return view('master.bank-accounts.show', compact('bank_account', 'movements', 'adjustments'));
     }
 
     public function store(Request $request): JsonResponse
@@ -171,6 +175,41 @@ class BankAccountController extends Controller
         });
 
         return back()->with('success', 'Transfer saldo berhasil disimpan.');
+    }
+
+    public function straightenBalance(Request $request, BankAccount $bank_account): RedirectResponse
+    {
+        $data = $request->validate([
+            'new_balance' => 'required|numeric|min:0',
+            'reason' => 'required|string|max:1000',
+        ], [
+            'new_balance.required' => 'Saldo benar wajib diisi.',
+            'reason.required' => 'Alasan meluruskan saldo wajib diisi.',
+        ]);
+
+        $oldBalance = (float) $bank_account->balance;
+        $newBalance = (float) $data['new_balance'];
+        $difference = abs($newBalance - $oldBalance);
+
+        if ($difference < 0.01) {
+            return back()->with('error', 'Saldo sudah sama, tidak ada perubahan yang perlu dicatat.');
+        }
+
+        DB::transaction(function () use ($bank_account, $oldBalance, $newBalance, $difference, $data) {
+            $bank_account->update(['balance' => $newBalance]);
+
+            BankBalanceAdjustment::create([
+                'bank_account_id' => $bank_account->id,
+                'previous_balance' => $oldBalance,
+                'new_balance' => $newBalance,
+                'difference' => $difference,
+                'type' => $newBalance > $oldBalance ? 'increase' : 'decrease',
+                'description' => 'Meluruskan saldo: ' . $data['reason'],
+                'created_by' => auth()->id(),
+            ]);
+        });
+
+        return back()->with('success', 'Saldo berhasil diluruskan dan alasannya sudah tersimpan di riwayat meluruskan saldo.');
     }
 
     public function destroy(BankAccount $bank_account): JsonResponse

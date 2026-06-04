@@ -3,9 +3,13 @@
 namespace App\Http\Controllers\Operasional;
 
 use App\Http\Controllers\Controller;
+use App\Models\BankAccount;
 use App\Models\ChecklistCategory;
 use App\Models\ChecklistItem;
 use App\Models\Customer;
+use App\Models\FinanceCategory;
+use App\Models\FinanceItem;
+use App\Models\FinanceTransaction;
 use App\Models\Material;
 use App\Models\Order;
 use App\Models\User;
@@ -16,6 +20,7 @@ use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
+use Illuminate\Validation\ValidationException;
 use Illuminate\Validation\Rule;
 use Illuminate\View\View;
 
@@ -54,8 +59,9 @@ class OrderController extends Controller
             ->where('status', 'aktif')
             ->orderBy('name')
             ->get(['id', 'name', 'phone']);
+        $bankAccounts = BankAccount::where('is_active', true)->orderBy('bank_name')->get();
 
-        return view('operasional.orders.create', compact('checklistCategories', 'materials', 'mechanics'));
+        return view('operasional.orders.create', compact('checklistCategories', 'materials', 'mechanics', 'bankAccounts'));
     }
 
     public function edit(Order $order): View
@@ -72,8 +78,9 @@ class OrderController extends Controller
             ->where('status', 'aktif')
             ->orderBy('name')
             ->get(['id', 'name', 'phone']);
+        $bankAccounts = BankAccount::where('is_active', true)->orderBy('bank_name')->get();
 
-        return view('operasional.orders.edit', compact('checklistCategories', 'materials', 'mechanics', 'order'));
+        return view('operasional.orders.edit', compact('checklistCategories', 'materials', 'mechanics', 'order', 'bankAccounts'));
     }
 
     public function store(Request $request): JsonResponse
@@ -99,6 +106,7 @@ class OrderController extends Controller
             'discount' => 'nullable|numeric|min:0',
             'other_service_price' => 'nullable|numeric|min:0',
             'status' => 'required|in:draft,open,belum_bayar,selesai',
+            'bank_account_id' => 'required_if:status,selesai|nullable|exists:bank_accounts,id',
             'items' => 'nullable|array',
             'items.*.checklist_item_id' => 'required|exists:checklist_items,id',
             'items.*.name' => 'required|string',
@@ -154,6 +162,7 @@ class OrderController extends Controller
                 'discount' => $request->discount ?? 0,
                 'other_service_price' => $request->other_service_price ?? 0,
                 'status' => $request->status,
+                'bank_account_id' => $request->bank_account_id,
                 'created_by' => auth()->id(),
                 'evidence_work_paths' => $this->storeOrderEvidences($request, 'evidences_work', 'orders/work-evidences'),
                 'evidence_payment_paths' => $this->storeOrderEvidences($request, 'evidences_payment', 'orders/payment-evidences'),
@@ -194,6 +203,7 @@ class OrderController extends Controller
                 'subtotal' => $subtotal,
                 'total' => $subtotal - ($request->discount ?? 0),
             ]);
+            $this->syncOrderFinanceTransaction($order->refresh());
 
             return $order;
         });
@@ -214,6 +224,7 @@ class OrderController extends Controller
             'discount' => 'nullable|numeric|min:0',
             'other_service_price' => 'nullable|numeric|min:0',
             'status' => 'required|in:draft,open,belum_bayar,selesai',
+            'bank_account_id' => 'required_if:status,selesai|nullable|exists:bank_accounts,id',
             'items' => 'nullable|array',
             'items.*.checklist_item_id' => 'required|exists:checklist_items,id',
             'items.*.name' => 'required|string',
@@ -244,6 +255,7 @@ class OrderController extends Controller
                 'discount' => $request->discount ?? 0,
                 'other_service_price' => $request->other_service_price ?? 0,
                 'status' => $request->status,
+                'bank_account_id' => $request->bank_account_id,
                 'evidence_work_paths' => array_values(array_filter(array_merge(
                     $order->evidence_work_paths ?? [],
                     $this->storeOrderEvidences($request, 'evidences_work', 'orders/work-evidences')
@@ -257,6 +269,7 @@ class OrderController extends Controller
             $order->items()->delete();
             $order->materials()->delete();
             $this->syncOrderLines($order, $request);
+            $this->syncOrderFinanceTransaction($order->refresh());
         });
 
         return response()->json([
@@ -358,6 +371,93 @@ class OrderController extends Controller
             'subtotal' => $subtotal,
             'total' => $subtotal - ($request->discount ?? 0),
         ]);
+    }
+
+    private function syncOrderFinanceTransaction(Order $order): void
+    {
+        $this->reverseFinanceTransaction($order->finance_transaction_id);
+        $order->update(['finance_transaction_id' => null]);
+
+        if ($order->status !== 'selesai') {
+            return;
+        }
+
+        if (!$order->bank_account_id) {
+            throw ValidationException::withMessages(['bank_account_id' => 'Bank pembayaran wajib dipilih saat order selesai.']);
+        }
+
+        $amount = (float) $order->total;
+        if ($amount <= 0) {
+            return;
+        }
+
+        $bank = BankAccount::lockForUpdate()->findOrFail($order->bank_account_id);
+        $item = $this->financeItem('AUTO-ORDER', 'Pembayaran Order', 'Pembayaran order pelanggan');
+        $financeTransaction = FinanceTransaction::create([
+            'transaction_number' => $this->financeTransactionNumber(),
+            'transaction_type' => 'income',
+            'transaction_date' => $order->order_date,
+            'finance_item_id' => $item->id,
+            'bank_account_id' => $order->bank_account_id,
+            'activity' => 'Pembayaran Order ' . $order->order_number,
+            'description' => 'Pembayaran Order ' . $order->order_number,
+            'amount' => $amount,
+            'notes' => $order->customer?->name ? 'Pelanggan: ' . $order->customer->name : null,
+            'evidence_paths' => $order->evidence_payment_paths,
+            'status' => 'disetujui',
+            'created_by' => auth()->id(),
+            'submitted_by' => auth()->id(),
+            'submitted_at' => now(),
+            'approved_by' => auth()->id(),
+            'approved_at' => now(),
+        ]);
+
+        $bank->increment('balance', $amount);
+        $order->update(['finance_transaction_id' => $financeTransaction->id]);
+    }
+
+    private function reverseFinanceTransaction(?int $financeTransactionId): void
+    {
+        if (!$financeTransactionId) {
+            return;
+        }
+
+        $transaction = FinanceTransaction::find($financeTransactionId);
+        if (!$transaction || $transaction->status !== 'disetujui') {
+            return;
+        }
+
+        $bank = BankAccount::lockForUpdate()->findOrFail($transaction->bank_account_id);
+        $transaction->transaction_type === 'income'
+            ? $bank->decrement('balance', $transaction->amount)
+            : $bank->increment('balance', $transaction->amount);
+        $transaction->delete();
+    }
+
+    private function financeItem(string $code, string $name, string $description): FinanceItem
+    {
+        $category = FinanceCategory::firstOrCreate(
+            ['code' => 'AUTO-OPS'],
+            ['name' => 'Operasional Otomatis', 'type' => 'expense', 'description' => 'Kategori otomatis dari modul operasional.']
+        );
+
+        return FinanceItem::firstOrCreate(
+            ['code' => $code],
+            ['finance_category_id' => $category->id, 'name' => $name, 'description' => $description, 'is_active' => true]
+        );
+    }
+
+    private function financeTransactionNumber(): string
+    {
+        $prefix = 'KEU-' . now()->format('y') . '-';
+        $lastNumber = FinanceTransaction::where('transaction_number', 'like', $prefix . '%')
+            ->lockForUpdate()
+            ->orderByDesc('transaction_number')
+            ->value('transaction_number');
+
+        $nextNumber = $lastNumber ? ((int) Str::afterLast($lastNumber, '-') + 1) : 1;
+
+        return $prefix . str_pad((string) $nextNumber, 5, '0', STR_PAD_LEFT);
     }
 
     private function storeOrderEvidences(Request $request, string $inputName, string $directory): array

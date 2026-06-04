@@ -3,6 +3,10 @@
 namespace App\Http\Controllers\Operasional;
 
 use App\Http\Controllers\Controller;
+use App\Models\BankAccount;
+use App\Models\FinanceCategory;
+use App\Models\FinanceItem;
+use App\Models\FinanceTransaction;
 use App\Models\Material;
 use App\Models\MaterialPurchase;
 use App\Models\MaterialStock;
@@ -11,6 +15,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
+use Illuminate\Validation\ValidationException;
 use Illuminate\Http\JsonResponse;
 use Illuminate\View\View;
 use Symfony\Component\HttpFoundation\File\UploadedFile;
@@ -54,8 +59,9 @@ class MaterialPurchaseController extends Controller
     public function create(): View
     {
         $materialOptions = $this->materialOptions();
+        $bankAccounts = BankAccount::where('is_active', true)->orderBy('bank_name')->get();
 
-        return view('operasional.material-purchases.create', compact('materialOptions'));
+        return view('operasional.material-purchases.create', compact('materialOptions', 'bankAccounts'));
     }
 
     public function store(Request $request)
@@ -72,6 +78,7 @@ class MaterialPurchaseController extends Controller
             'unit.*' => 'required|string|max:30',
             'unit_price' => 'required|array|min:1',
             'unit_price.*' => 'required|numeric|min:0',
+            'bank_account_id' => 'required|exists:bank_accounts,id',
             'evidence' => 'nullable|array',
             'evidence.*' => 'file|mimes:jpg,jpeg,png,webp,pdf|max:4096',
         ], [
@@ -106,6 +113,7 @@ class MaterialPurchaseController extends Controller
                     'status' => 'menunggu_approval',
                     'submitted_by' => auth()->id(),
                     'submitted_at' => now(),
+                    'bank_account_id' => $request->bank_account_id,
                 ]);
             }
 
@@ -123,7 +131,7 @@ class MaterialPurchaseController extends Controller
 
     public function edit(string $transaction): View
     {
-        $items = MaterialPurchase::with(['material.category', 'material.stock'])
+        $items = MaterialPurchase::with(['material.category', 'material.stock', 'submitter', 'approver', 'rejecter'])
             ->where('invoice_number', $transaction)
             ->orderBy('id')
             ->get();
@@ -137,6 +145,7 @@ class MaterialPurchaseController extends Controller
             'purchase_date' => $first->purchase_date,
             'supplier' => $first->supplier,
             'notes' => $first->notes,
+            'bank_account_id' => $first->bank_account_id,
             'evidence_url' => $first->evidence_path ? Storage::disk('r2')->url($first->evidence_path) : null,
             'evidence_files' => $evidenceFiles,
         ];
@@ -147,8 +156,9 @@ class MaterialPurchaseController extends Controller
             'unit_price' => (int) $item->unit_price,
         ])->values();
         $materialOptions = $this->materialOptions();
+        $bankAccounts = BankAccount::where('is_active', true)->orderBy('bank_name')->get();
 
-        return view('operasional.material-purchases.create', compact('materialOptions', 'summary', 'initialItems'));
+        return view('operasional.material-purchases.edit', compact('materialOptions', 'summary', 'initialItems', 'bankAccounts'));
     }
 
     public function update(Request $request, string $transaction)
@@ -165,6 +175,7 @@ class MaterialPurchaseController extends Controller
             'unit.*' => 'required|string|max:30',
             'unit_price' => 'required|array|min:1',
             'unit_price.*' => 'required|numeric|min:0',
+            'bank_account_id' => 'required|exists:bank_accounts,id',
             'evidence' => 'nullable|array',
             'evidence.*' => 'file|mimes:jpg,jpeg,png,webp,pdf|max:4096',
         ]);
@@ -185,6 +196,7 @@ class MaterialPurchaseController extends Controller
 
             if ($wasApproved) {
                 $this->applyStockMutation($items, -1);
+                $this->reverseFinanceTransaction($first->finance_transaction_id);
             }
 
             MaterialPurchase::where('invoice_number', $transaction)->delete();
@@ -214,11 +226,13 @@ class MaterialPurchaseController extends Controller
                     'rejected_by' => null,
                     'rejected_at' => null,
                     'rejection_reason' => null,
+                    'bank_account_id' => $request->bank_account_id,
                 ]));
             }
 
             if ($wasApproved) {
                 $this->applyStockMutation($newItems, 1);
+                $this->createApprovedFinanceTransactionForPurchase($transaction, $newItems, $request->bank_account_id);
             }
         });
 
@@ -227,7 +241,7 @@ class MaterialPurchaseController extends Controller
 
     public function show(string $transaction): View
     {
-        $items = MaterialPurchase::with(['material.category', 'material.stock'])
+        $items = MaterialPurchase::with(['material.category', 'material.stock', 'bankAccount'])
             ->where('invoice_number', $transaction)
             ->orderBy('id')
             ->get();
@@ -245,10 +259,21 @@ class MaterialPurchaseController extends Controller
             'evidence_url' => $first->evidence_path ? Storage::disk('r2')->url($first->evidence_path) : null,
             'evidence_is_image' => $this->isImageEvidence($first->evidence_path),
             'evidence_files' => $evidenceFiles,
+            'bank_account_id' => $first->bank_account_id,
+            'bank_code' => $first->bankAccount?->code,
+            'bank_name' => $first->bankAccount?->bank_name,
+            'bank_account_name' => $first->bankAccount?->account_name,
+            'bank_account_number' => $first->bankAccount?->account_number,
+            'bank_logo_url' => $first->bankAccount?->logo_url,
+            'bank_logo_text' => $first->bankAccount?->logo_text,
             'total_price' => $items->sum('total_price'),
             'item_count' => $items->count(),
             'status' => $first->status,
             'rejection_reason' => $first->rejection_reason,
+            'submitter_name' => $first->submitter?->name,
+            'submitted_at' => $first->submitted_at,
+            'processor_name' => $first->approver?->name ?? $first->rejecter?->name,
+            'processed_at' => $first->approved_at ?: $first->rejected_at,
         ];
 
         return view('operasional.material-purchases.show', compact('summary', 'items'));
@@ -288,6 +313,7 @@ class MaterialPurchaseController extends Controller
                 'rejection_reason' => null,
             ]);
 
+            $this->createApprovedFinanceTransactionForPurchase($transaction, $items, $items->first()->bank_account_id);
             $this->notifySubmitter($items->first(), 'Pembelian Material Disetujui', 'Pembelian ' . $transaction . ' sudah disetujui.', 'check-circle');
         });
 
@@ -469,6 +495,87 @@ class MaterialPurchaseController extends Controller
         $nextSequence = $lastNumber ? ((int) substr($lastNumber, -4)) + 1 : 1;
 
         return $prefix . str_pad((string) $nextSequence, 4, '0', STR_PAD_LEFT);
+    }
+
+    private function createApprovedFinanceTransactionForPurchase(string $transaction, $items, int|string|null $bankAccountId): void
+    {
+        if (!$bankAccountId) {
+            throw ValidationException::withMessages(['bank_account_id' => 'Bank pembayaran wajib dipilih.']);
+        }
+
+        $amount = (float) $items->sum('total_price');
+        $bank = BankAccount::lockForUpdate()->findOrFail($bankAccountId);
+        if ((float) $bank->balance < $amount) {
+            throw ValidationException::withMessages(['bank_account_id' => 'Saldo bank tidak mencukupi untuk pembelian material ini.']);
+        }
+
+        $first = $items->first();
+        $item = $this->financeItem('AUTO-MATERIAL', 'Pembelian Material', 'Pembelian material operasional');
+        $financeTransaction = FinanceTransaction::create([
+            'transaction_number' => $this->financeTransactionNumber(),
+            'transaction_type' => 'expense',
+            'transaction_date' => $first->purchase_date,
+            'finance_item_id' => $item->id,
+            'bank_account_id' => $bankAccountId,
+            'activity' => 'Pembelian Material ' . $transaction,
+            'description' => 'Pembelian Material ' . $transaction,
+            'amount' => $amount,
+            'notes' => $first->supplier ? 'Supplier: ' . $first->supplier : null,
+            'evidence_paths' => $first->evidence_paths,
+            'status' => 'disetujui',
+            'created_by' => auth()->id(),
+            'submitted_by' => $first->submitted_by,
+            'submitted_at' => $first->submitted_at,
+            'approved_by' => auth()->id(),
+            'approved_at' => now(),
+        ]);
+
+        $bank->decrement('balance', $amount);
+        MaterialPurchase::where('invoice_number', $transaction)->update(['finance_transaction_id' => $financeTransaction->id]);
+    }
+
+    private function reverseFinanceTransaction(?int $financeTransactionId): void
+    {
+        if (!$financeTransactionId) {
+            return;
+        }
+
+        $transaction = FinanceTransaction::find($financeTransactionId);
+        if (!$transaction || $transaction->status !== 'disetujui') {
+            return;
+        }
+
+        $bank = BankAccount::lockForUpdate()->findOrFail($transaction->bank_account_id);
+        $transaction->transaction_type === 'income'
+            ? $bank->decrement('balance', $transaction->amount)
+            : $bank->increment('balance', $transaction->amount);
+        $transaction->delete();
+    }
+
+    private function financeItem(string $code, string $name, string $description): FinanceItem
+    {
+        $category = FinanceCategory::firstOrCreate(
+            ['code' => 'AUTO-OPS'],
+            ['name' => 'Operasional Otomatis', 'type' => 'expense', 'description' => 'Kategori otomatis dari modul operasional.']
+        );
+
+        return FinanceItem::firstOrCreate(
+            ['code' => $code],
+            ['finance_category_id' => $category->id, 'name' => $name, 'description' => $description, 'is_active' => true]
+        );
+    }
+
+    private function financeTransactionNumber(): string
+    {
+        $prefix = 'KEU-' . now()->format('y') . '-';
+        $lastNumber = FinanceTransaction::where('transaction_number', 'like', $prefix . '%')
+            ->lockForUpdate()
+            ->orderByDesc('transaction_number')
+            ->value('transaction_number');
+
+        $nextNumber = $lastNumber ? ((int) Str::afterLast($lastNumber, '-') + 1) : 1;
+
+        return $prefix . str_pad((string) $nextNumber, 5, '0', STR_PAD_LEFT);
     }
 
     private function notifyPurchaseApprovers(string $transactionNumber, ?string $supplier): void

@@ -383,7 +383,7 @@
                     <!--begin:Menu item-->
                     <div class="menu-item">
                         <!--begin:Menu link-->
-                        <a class="menu-link" href="#">
+                        <a class="menu-link {{ request()->routeIs('notifications.*') ? 'active' : '' }}" href="{{ route('notifications.index') }}">
                             <span class="menu-icon">
                                 <i class="ki-duotone ki-notification-bing fs-2">
                                     <span class="path1"></span>

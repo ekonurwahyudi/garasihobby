@@ -21,10 +21,10 @@ class FinanceCategoryController extends Controller
         $data = $request->validate([
             'code' => 'required|string|max:20|unique:finance_categories,code',
             'name' => 'required|string|max:100',
-            'type' => 'required|in:income,expense',
             'description' => 'nullable|string',
         ]);
 
+        $data['type'] = 'expense';
         FinanceCategory::create($data);
         return response()->json(['success' => true]);
     }
@@ -39,10 +39,10 @@ class FinanceCategoryController extends Controller
         $data = $request->validate([
             'code' => 'required|string|max:20|unique:finance_categories,code,' . $finance_category->id,
             'name' => 'required|string|max:100',
-            'type' => 'required|in:income,expense',
             'description' => 'nullable|string',
         ]);
 
+        $data['type'] = $finance_category->type ?: 'expense';
         $finance_category->update($data);
         return response()->json(['success' => true]);
     }

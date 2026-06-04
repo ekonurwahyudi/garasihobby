@@ -15,8 +15,8 @@
     <a href="#" class="btn btn-sm btn-success" id="exportExcel">
         <i class="ki-duotone ki-file-down fs-3"><span class="path1"></span><span class="path2"></span></i> Export Excel
     </a>
-    <a href="{{ route('orders.create') }}" class="btn btn-sm btn-primary">
-        <i class="ki-duotone ki-plus-square fs-3"><span class="path1"></span><span class="path2"></span><span class="path3"></span></i> Input Order
+    <a href="{{ route('orders.create') }}" class="btn btn-sm btn-primary d-inline-flex align-items-center gap-2">
+        <i class="ki-duotone ki-plus-circle fs-2"><span class="path1"></span><span class="path2"></span></i> Input Order
     </a>
     @endcan
 @endsection
@@ -24,16 +24,17 @@
 @section('content')
 @php
     $orderTabs = [
+        'semua' => ['label' => 'Semua', 'pane' => 'tab_all', 'icon' => 'ki-abstract-26', 'icon_color' => 'text-info', 'badge' => 'badge-light-info'],
         'open' => ['label' => 'Open', 'pane' => 'tab_open', 'icon' => 'ki-notepad', 'icon_color' => 'text-primary', 'badge' => 'badge-light-primary'],
         'draft' => ['label' => 'Draft', 'pane' => 'tab_draft', 'icon' => 'ki-pencil', 'icon_color' => 'text-gray-600', 'badge' => 'badge-light'],
         'belum_bayar' => ['label' => 'Belum Bayar', 'pane' => 'tab_unpaid', 'icon' => 'ki-time', 'icon_color' => 'text-warning', 'badge' => 'badge-light-warning'],
         'selesai' => ['label' => 'Selesai', 'pane' => 'tab_completed', 'icon' => 'ki-check-circle', 'icon_color' => 'text-success', 'badge' => 'badge-light-success'],
     ];
     $orderStats = [
-        ['label' => 'Open', 'value' => $data->where('status', 'open')->count(), 'icon' => 'ki-notepad', 'color' => 'primary'],
-        ['label' => 'Menunggu Bayar', 'value' => $data->where('status', 'belum_bayar')->count(), 'icon' => 'ki-time', 'color' => 'warning'],
-        ['label' => 'Selesai', 'value' => $data->where('status', 'selesai')->count(), 'icon' => 'ki-check-circle', 'color' => 'success'],
-        ['label' => 'Total Order', 'value' => $data->count(), 'icon' => 'ki-abstract-26', 'color' => 'info'],
+        ['label' => 'Total Order', 'value' => $data->count(), 'hint' => 'Semua status', 'icon' => 'ki-abstract-26', 'tone' => 'info'],
+        ['label' => 'Open', 'value' => $data->where('status', 'open')->count(), 'hint' => 'Sedang berjalan', 'icon' => 'ki-notepad', 'tone' => 'primary'],
+        ['label' => 'Menunggu Bayar', 'value' => $data->where('status', 'belum_bayar')->count(), 'hint' => 'Perlu pembayaran', 'icon' => 'ki-time', 'tone' => 'warning'],
+        ['label' => 'Selesai', 'value' => $data->where('status', 'selesai')->count(), 'hint' => 'Order closed', 'icon' => 'ki-check-circle', 'tone' => 'success'],
     ];
     $revenue = $data->where('status', 'selesai')->sum('total');
 @endphp
@@ -41,35 +42,24 @@
 <div class="row row-cols-1 row-cols-sm-2 row-cols-lg-3 row-cols-xl-5 g-5 mb-7">
     @foreach($orderStats as $stat)
     <div class="col">
-        <div class="card card-flush h-100 order-stat-card">
-            <div class="card-body d-flex align-items-center gap-4">
-                <div class="symbol symbol-50px">
-                    <div class="symbol-label bg-light-{{ $stat['color'] }}">
-                        <i class="ki-duotone {{ $stat['icon'] }} fs-2x text-{{ $stat['color'] }}"><span class="path1"></span><span class="path2"></span><span class="path3"></span></i>
-                    </div>
-                </div>
-                <div>
-                    <div class="text-gray-500 fw-semibold fs-7 mb-1">{{ $stat['label'] }}</div>
-                    <div class="text-gray-900 fw-bold fs-2">{{ number_format($stat['value'], 0, ',', '.') }}</div>
-                </div>
+        <div class="order-stat-card order-stat-{{ $stat['tone'] }} h-100">
+            <div class="order-stat-top">
+                <span class="order-stat-icon"><i class="ki-duotone {{ $stat['icon'] }} fs-2"><span class="path1"></span><span class="path2"></span><span class="path3"></span></i></span>
+                <span class="order-stat-hint">{{ $stat['hint'] }}</span>
             </div>
+            <div class="order-stat-value">{{ number_format($stat['value'], 0, ',', '.') }}</div>
+            <div class="order-stat-label">{{ $stat['label'] }}</div>
         </div>
     </div>
     @endforeach
     <div class="col">
-        <div class="card card-flush h-100 order-stat-card">
-            <div class="card-body d-flex align-items-center gap-4">
-                <div class="symbol symbol-50px">
-                    <div class="symbol-label bg-light-success">
-                        <i class="ki-duotone ki-dollar fs-2x text-success"><span class="path1"></span><span class="path2"></span><span class="path3"></span></i>
-                    </div>
-                </div>
-                <div>
-                    <div class="text-gray-500 fw-semibold fs-7 mb-1">Revenue</div>
-                    <div class="text-gray-900 fw-bold fs-4">Rp {{ number_format($revenue, 0, ',', '.') }}</div>
-                    <div class="text-muted fs-8">Order selesai</div>
-                </div>
+        <div class="order-stat-card order-stat-revenue h-100">
+            <div class="order-stat-top">
+                <span class="order-stat-icon"><i class="ki-duotone ki-dollar fs-2"><span class="path1"></span><span class="path2"></span><span class="path3"></span></i></span>
+                <span class="order-stat-hint">Order selesai</span>
             </div>
+            <div class="order-stat-value order-stat-currency">Rp {{ number_format($revenue, 0, ',', '.') }}</div>
+            <div class="order-stat-label">Revenue</div>
         </div>
     </div>
 </div>
@@ -82,7 +72,7 @@
                     <a class="nav-link {{ $loop->first ? 'active' : '' }} fw-semibold" data-bs-toggle="tab" data-status="{{ $status }}" href="#{{ $tab['pane'] }}">
                         <i class="ki-duotone {{ $tab['icon'] }} {{ $tab['icon_color'] }} fs-3 me-2"><span class="path1"></span><span class="path2"></span><span class="path3"></span></i>
                         {{ $tab['label'] }}
-                        <span class="badge {{ $tab['badge'] }} ms-2">{{ $data->where('status', $status)->count() }}</span>
+                        <span class="badge {{ $tab['badge'] }} ms-2">{{ $status === 'semua' ? $data->count() : $data->where('status', $status)->count() }}</span>
                     </a>
                 </li>
             @endforeach
@@ -106,9 +96,9 @@
 
         <div class="tab-content" id="orderTabContent">
             @foreach($orderTabs as $status => $tab)
-                @php($tabOrders = $data->where('status', $status)->values())
+                @php($tabOrders = $status === 'semua' ? $data->values() : $data->where('status', $status)->values())
                 <div class="tab-pane fade {{ $loop->first ? 'show active' : '' }}" id="{{ $tab['pane'] }}" role="tabpanel">
-                    <table id="table_{{ $status }}" class="table table-striped table-row-bordered gy-5 gs-7 border rounded order-table" data-status="{{ $status }}">
+                    <table id="table_{{ $status }}" class="table align-middle border rounded order-table" data-status="{{ $status }}">
                         <thead>
                             <tr class="fw-semibold fs-6 text-gray-800">
                                 <th class="w-50px">No</th>
@@ -176,13 +166,84 @@
 @push('styles')
 <style>
 .order-stat-card {
-    border: 1px solid #eff2f5;
+    position: relative;
+    overflow: hidden;
+    border: 1px solid #e4e8f0;
+    border-radius: 18px;
+    background: #fff;
+    padding: 20px;
+    min-height: 142px;
+    box-shadow: 0 12px 28px rgba(15, 23, 42, .05);
     transition: transform .15s ease, box-shadow .15s ease;
+}
+.order-stat-card::after {
+    content: "";
+    position: absolute;
+    width: 118px;
+    height: 118px;
+    right: -48px;
+    top: -48px;
+    border-radius: 50%;
+    background: rgba(255,255,255,.72);
 }
 .order-stat-card:hover {
     transform: translateY(-2px);
-    box-shadow: 0 8px 20px rgba(24, 28, 50, .08);
+    box-shadow: 0 16px 34px rgba(15, 23, 42, .08);
 }
+.order-stat-top {
+    position: relative;
+    z-index: 1;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    margin-bottom: 18px;
+}
+.order-stat-icon {
+    width: 44px;
+    height: 44px;
+    border-radius: 14px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    background: rgba(255,255,255,.86);
+}
+.order-stat-hint {
+    color: #64748b;
+    font-size: 11px;
+    font-weight: 700;
+    text-transform: uppercase;
+}
+.order-stat-value {
+    position: relative;
+    z-index: 1;
+    color: #0f172a;
+    font-size: 30px;
+    font-weight: 800;
+    line-height: 1;
+}
+.order-stat-currency {
+    font-size: 20px;
+    line-height: 1.2;
+}
+.order-stat-label {
+    position: relative;
+    z-index: 1;
+    color: #64748b;
+    font-size: 13px;
+    font-weight: 700;
+    margin-top: 8px;
+}
+.order-stat-info { background: linear-gradient(135deg,#eff6ff 0%,#fff 70%); }
+.order-stat-primary { background: linear-gradient(135deg,#eef4ff 0%,#fff 70%); }
+.order-stat-warning { background: linear-gradient(135deg,#fff8e6 0%,#fff 70%); }
+.order-stat-success,
+.order-stat-revenue { background: linear-gradient(135deg,#ecfdf3 0%,#fff 70%); }
+.order-stat-info .order-stat-icon { color: #0ea5e9; }
+.order-stat-primary .order-stat-icon { color: #1b84ff; }
+.order-stat-warning .order-stat-icon { color: #f59e0b; }
+.order-stat-success .order-stat-icon,
+.order-stat-revenue .order-stat-icon { color: #12a150; }
 .order-status-tabs {
     border-bottom-width: 3px;
 }
@@ -193,13 +254,33 @@
 .order-status-tabs .nav-link.active {
     border-bottom-width: 4px;
 }
+.order-table.dataTable {
+    border: 1px solid #dfe5ef;
+    border-radius: 12px;
+    background: #fff;
+}
+.order-table.dataTable thead th:first-child {
+    border-top-left-radius: 12px;
+}
+.order-table.dataTable thead th:last-child {
+    border-top-right-radius: 12px;
+}
+.order-table.dataTable tbody tr:last-child td:first-child {
+    border-bottom-left-radius: 12px;
+}
+.order-table.dataTable tbody tr:last-child td:last-child {
+    border-bottom-right-radius: 12px;
+}
+.order-table {
+    margin-bottom: 0 !important;
+}
 </style>
 @endpush
 
 @push('scripts')
 <script>
 var tables = {};
-var activeStatus = 'open';
+var activeStatus = 'semua';
 
 $(document).ready(function() {
     $('.order-table').each(function() {

@@ -15,6 +15,7 @@ use App\Http\Controllers\Operasional\CustomerController;
 use App\Http\Controllers\Operasional\MaterialInventoryController;
 use App\Http\Controllers\Operasional\MaterialPurchaseController;
 use App\Http\Controllers\Operasional\OrderController;
+use App\Http\Controllers\NotificationController;
 use App\Http\Controllers\Role\RoleController;
 use Illuminate\Support\Facades\Route;
 
@@ -26,6 +27,12 @@ Route::middleware(['auth'])->group(function () {
     Route::get('/dashboard', [DashboardController::class, 'index'])
         ->middleware('can:dashboard.view')
         ->name('dashboard');
+
+    Route::middleware('can:notifications.view')->group(function () {
+        Route::get('/notifikasi', [NotificationController::class, 'index'])->name('notifications.index');
+        Route::post('/notifikasi/read-all', [NotificationController::class, 'readAll'])->name('notifications.read-all');
+        Route::post('/notifikasi/{notification}/read', [NotificationController::class, 'read'])->name('notifications.read');
+    });
 
     // Master Data - User
     Route::middleware('can:users.view')->group(function () {
@@ -110,6 +117,7 @@ Route::middleware(['auth'])->group(function () {
         Route::post('/master/bank-accounts', [BankAccountController::class, 'store'])->middleware('can:bank-accounts.create')->name('bank-accounts.store');
         Route::post('/master/bank-accounts/transfer', [BankAccountController::class, 'transfer'])->middleware('can:bank-accounts.edit')->name('bank-accounts.transfer');
         Route::get('/master/bank-accounts/{bank_account}/edit', [BankAccountController::class, 'edit'])->middleware('can:bank-accounts.edit')->name('bank-accounts.edit');
+        Route::post('/master/bank-accounts/{bank_account}/straighten-balance', [BankAccountController::class, 'straightenBalance'])->middleware('can:bank-accounts.edit')->name('bank-accounts.straighten-balance');
         Route::get('/master/bank-accounts/{bank_account}', [BankAccountController::class, 'show'])->name('bank-accounts.show');
         Route::put('/master/bank-accounts/{bank_account}', [BankAccountController::class, 'update'])->middleware('can:bank-accounts.edit')->name('bank-accounts.update');
         Route::delete('/master/bank-accounts/{bank_account}', [BankAccountController::class, 'destroy'])->middleware('can:bank-accounts.delete')->name('bank-accounts.destroy');
@@ -161,10 +169,14 @@ Route::middleware(['auth'])->group(function () {
     // Keuangan - Input Keuangan
     Route::middleware('can:finance-transactions.view')->group(function () {
         Route::get('/keuangan/transaksi', [FinanceTransactionController::class, 'index'])->name('finance-transactions.index');
+        Route::get('/keuangan/transaksi/create', [FinanceTransactionController::class, 'create'])->middleware('can:finance-transactions.create')->name('finance-transactions.create');
         Route::post('/keuangan/transaksi', [FinanceTransactionController::class, 'store'])->middleware('can:finance-transactions.create')->name('finance-transactions.store');
         Route::get('/keuangan/transaksi/{finance_transaction}/edit', [FinanceTransactionController::class, 'edit'])->middleware('can:finance-transactions.edit')->name('finance-transactions.edit');
         Route::put('/keuangan/transaksi/{finance_transaction}', [FinanceTransactionController::class, 'update'])->middleware('can:finance-transactions.edit')->name('finance-transactions.update');
         Route::delete('/keuangan/transaksi/{finance_transaction}', [FinanceTransactionController::class, 'destroy'])->middleware('can:finance-transactions.delete')->name('finance-transactions.destroy');
+        Route::post('/keuangan/transaksi/{finance_transaction}/approve', [FinanceTransactionController::class, 'approve'])->middleware('can:finance-transactions.approve')->name('finance-transactions.approve');
+        Route::post('/keuangan/transaksi/{finance_transaction}/reject', [FinanceTransactionController::class, 'reject'])->middleware('can:finance-transactions.approve')->name('finance-transactions.reject');
+        Route::get('/keuangan/transaksi/{finance_transaction}', [FinanceTransactionController::class, 'show'])->name('finance-transactions.show');
     });
 });
 

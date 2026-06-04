@@ -8,9 +8,9 @@
         * { box-sizing: border-box; }
         body {
             margin: 0;
-            background: #f4f6f8;
-            color: #101828;
-            font-family: Arial, Helvetica, sans-serif;
+            background: #eef2f7;
+            color: #0f172a;
+            font-family: "Inter", Arial, Helvetica, sans-serif;
             font-size: 13px;
         }
         .toolbar {
@@ -26,10 +26,10 @@
         }
         .btn {
             border: 0;
-            border-radius: 6px;
+            border-radius: 10px;
             padding: 9px 14px;
             color: #fff;
-            background: #1570ef;
+            background: #1b84ff;
             font-weight: 700;
             text-decoration: none;
             cursor: pointer;
@@ -41,25 +41,45 @@
             margin: 18px auto;
             padding: 18mm;
             background: #fff;
-            box-shadow: 0 10px 30px rgba(16, 24, 40, .12);
+            border-radius: 18px;
+            box-shadow: 0 18px 44px rgba(15, 23, 42, .14);
         }
         .header {
             display: flex;
             justify-content: space-between;
             gap: 24px;
-            border-bottom: 2px solid #101828;
-            padding-bottom: 14px;
+            border-radius: 18px;
+            padding: 18px;
             margin-bottom: 18px;
+            background: linear-gradient(135deg, #0f172a, #1e293b);
+            color: #fff;
+            position: relative;
+            overflow: hidden;
+        }
+        .header::after {
+            content: "";
+            position: absolute;
+            width: 160px;
+            height: 160px;
+            right: -56px;
+            top: -56px;
+            border-radius: 50%;
+            background: rgba(255,255,255,.08);
         }
         .brand {
             display: flex;
             gap: 14px;
             align-items: center;
+            position: relative;
+            z-index: 1;
         }
         .brand img {
             width: 74px;
             height: 74px;
             object-fit: contain;
+            background: #fff;
+            border-radius: 16px;
+            padding: 8px;
         }
         .brand-title {
             font-size: 22px;
@@ -67,16 +87,29 @@
             letter-spacing: .5px;
         }
         .brand-subtitle {
-            color: #475467;
+            color: #cbd5e1;
             font-size: 12px;
             margin-top: 3px;
         }
         .invoice-title {
             text-align: right;
+            position: relative;
+            z-index: 1;
         }
         .invoice-title h1 {
             margin: 0 0 8px;
-            font-size: 28px;
+            font-size: 32px;
+            letter-spacing: 1px;
+        }
+        .status-pill {
+            display: inline-block;
+            border-radius: 999px;
+            padding: 6px 12px;
+            margin-top: 8px;
+            background: rgba(16, 185, 129, .16);
+            color: #bbf7d0;
+            font-weight: 800;
+            font-size: 11px;
         }
         .meta, .info-table, .items-table, .totals-table {
             width: 100%;
@@ -92,7 +125,8 @@
         .section-title {
             margin-bottom: 8px;
             font-weight: 800;
-            color: #1570ef;
+            color: #1b84ff;
+            letter-spacing: .2px;
         }
         .info-grid {
             display: grid;
@@ -100,9 +134,10 @@
             gap: 14px;
         }
         .panel {
-            border: 1px solid #d0d5dd;
-            border-radius: 8px;
-            padding: 12px;
+            border: 1px solid #e2e8f0;
+            border-radius: 14px;
+            padding: 14px;
+            background: #f8fafc;
         }
         .info-table td {
             padding: 4px 0;
@@ -114,14 +149,20 @@
         }
         .items-table th,
         .items-table td {
-            border: 1px solid #d0d5dd;
+            border-bottom: 1px solid #e2e8f0;
             padding: 8px;
             vertical-align: top;
         }
         .items-table th {
-            background: #f2f4f7;
+            background: #f1f5f9;
             text-align: left;
             font-size: 12px;
+            color: #334155;
+        }
+        .items-table {
+            border: 1px solid #e2e8f0;
+            border-radius: 14px;
+            overflow: hidden;
         }
         .text-end { text-align: right; }
         .totals-wrap {
@@ -131,9 +172,13 @@
         }
         .totals-table {
             width: 330px;
+            border: 1px solid #e2e8f0;
+            border-radius: 14px;
+            overflow: hidden;
+            background: #f8fafc;
         }
         .totals-table td {
-            padding: 7px 0;
+            padding: 9px 12px;
             border-bottom: 1px solid #eaecf0;
         }
         .totals-table td:last-child {
@@ -145,13 +190,15 @@
             padding-top: 12px;
             font-size: 17px;
             font-weight: 800;
-            color: #1570ef;
+            color: #1b84ff;
+            background: #eff6ff;
         }
         .payment {
             margin-top: 20px;
-            border: 1px solid #d0d5dd;
-            border-radius: 8px;
-            padding: 12px;
+            border: 1px solid #bfdbfe;
+            border-radius: 16px;
+            padding: 14px;
+            background: linear-gradient(135deg, #eff6ff, #ffffff);
         }
         .signatures {
             display: grid;
@@ -173,6 +220,7 @@
                 min-height: auto;
                 margin: 0;
                 padding: 10mm;
+                border-radius: 0;
                 box-shadow: none;
             }
         }
@@ -210,8 +258,8 @@
             <table class="meta">
                 <tr><td>No Faktur</td><td>: {{ $order->order_number }}</td></tr>
                 <tr><td>Tanggal</td><td>: {{ $order->order_date->format('d/m/Y') }}</td></tr>
-                <tr><td>Status</td><td>: Selesai</td></tr>
             </table>
+            <div class="status-pill">SELESAI</div>
         </div>
     </div>
 

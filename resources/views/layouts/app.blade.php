@@ -12,7 +12,9 @@
     <link rel="shortcut icon" type="image/png" href="{{ asset('assets/media/logos.png') }}" />
 
     {{-- Fonts --}}
-    <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Inter:300,400,500,600,700" />
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Onest:wght@100..900&display=swap" rel="stylesheet">
 
     {{-- Vendor Stylesheets --}}
     <link href="{{ asset('assets/plugins/global/plugins.bundle.css') }}" rel="stylesheet" type="text/css" />
@@ -20,6 +22,17 @@
     <link href="{{ asset('assets/css/style.bundle.css') }}" rel="stylesheet" type="text/css" />
 
     <style>
+        :root {
+            --bs-font-sans-serif: "Onest", sans-serif;
+        }
+        body,
+        button,
+        input,
+        optgroup,
+        select,
+        textarea {
+            font-family: "Onest", sans-serif;
+        }
         .brand-logo-img {
             display: block;
             width: auto;
@@ -37,6 +50,208 @@
             height: 32px;
             object-fit: cover;
             object-position: left center;
+        }
+        .app-content .table-responsive {
+            border-radius: 12px;
+        }
+        .app-content .table:not(.table-borderless) {
+            margin-bottom: 0;
+            color: #17213b;
+        }
+        .app-content .table:not(.table-borderless) > thead > tr > th {
+            background: #f3f6fa;
+            color: #061535;
+            font-size: 13px;
+            font-weight: 700;
+            padding: 14px 12px;
+            border-bottom: 1px solid #dfe5ef;
+            vertical-align: middle;
+            white-space: nowrap;
+        }
+        .app-content .table:not(.table-borderless) > tbody > tr > td {
+            padding: 14px 12px;
+            border-bottom: 1px solid #edf1f6;
+            vertical-align: middle;
+            font-size: 13px;
+        }
+        .app-content .table:not(.table-borderless) > tbody > tr:hover {
+            background: #f9fbff;
+        }
+        .app-content .table.table-striped > tbody > tr:nth-of-type(odd) > *,
+        .app-content .table.table-striped > tbody > tr:nth-of-type(even) > * {
+            --bs-table-bg-type: transparent;
+            background-color: transparent !important;
+            box-shadow: none !important;
+        }
+        .app-content .table.table-striped > tbody > tr:hover > * {
+            background-color: #f9fbff !important;
+        }
+        .app-content .table:not(.table-borderless) > tbody > tr:last-child > td {
+            border-bottom: 0;
+        }
+        .app-content .table.border,
+        .app-content .table.rounded {
+            border-color: #dfe5ef !important;
+            border-radius: 12px !important;
+            overflow: hidden;
+        }
+        .app-content table.dataTable > thead > tr > th,
+        .app-content table.dataTable > thead > tr > th.sorting_asc,
+        .app-content table.dataTable > thead > tr > th.sorting_desc {
+            position: relative;
+            padding-right: 28px;
+        }
+        .app-content table.dataTable > thead > tr > th::before,
+        .app-content table.dataTable > thead > tr > th::after,
+        .app-content table.dataTable > thead > tr > th.sorting_asc::before,
+        .app-content table.dataTable > thead > tr > th.sorting_asc::after,
+        .app-content table.dataTable > thead > tr > th.sorting_desc::before,
+        .app-content table.dataTable > thead > tr > th.sorting_desc::after {
+            content: "";
+            position: absolute;
+            right: 10px;
+            width: 0;
+            height: 0;
+            border-left: 5px solid transparent;
+            border-right: 5px solid transparent;
+            opacity: 1;
+        }
+        .app-content table.dataTable > thead > tr > th::before,
+        .app-content table.dataTable > thead > tr > th.sorting_asc::before,
+        .app-content table.dataTable > thead > tr > th.sorting_desc::before {
+            top: calc(50% - 8px);
+            border-bottom: 6px solid #aab2bd;
+        }
+        .app-content table.dataTable > thead > tr > th::after,
+        .app-content table.dataTable > thead > tr > th.sorting_asc::after,
+        .app-content table.dataTable > thead > tr > th.sorting_desc::after {
+            top: calc(50% + 2px);
+            border-top: 6px solid #aab2bd;
+        }
+        .app-content table.dataTable > thead > tr > th.sorting_asc::before {
+            border-bottom-color: #1f2937;
+        }
+        .app-content table.dataTable > thead > tr > th.sorting_desc::after {
+            border-top-color: #1f2937;
+        }
+        .app-content table.dataTable > thead > tr > th.text-end::before,
+        .app-content table.dataTable > thead > tr > th.text-end::after {
+            right: 12px;
+        }
+        .app-content table.dataTable > thead > tr > th:first-child::before,
+        .app-content table.dataTable > thead > tr > th:first-child::after,
+        .app-content table.dataTable > thead > tr > th.no-sort::before,
+        .app-content table.dataTable > thead > tr > th.no-sort::after,
+        .app-content table.dataTable > thead > tr > th.sorting_disabled::before,
+        .app-content table.dataTable > thead > tr > th.sorting_disabled::after,
+        .app-content table.dataTable > thead > tr > th:last-child::before,
+        .app-content table.dataTable > thead > tr > th:last-child::after {
+            display: none !important;
+        }
+        .app-content table.dataTable > thead > tr > th:first-child,
+        .app-content table.dataTable > thead > tr > th.no-sort,
+        .app-content table.dataTable > thead > tr > th.sorting_disabled,
+        .app-content table.dataTable > thead > tr > th:last-child {
+            padding-right: 12px;
+        }
+        .app-content .dataTables_wrapper .dataTables_info {
+            color: #061535;
+            font-size: 13px;
+            padding-top: 0 !important;
+        }
+        .app-content .dataTables_wrapper > .row:last-child,
+        .app-content .dataTables_wrapper .finance-table-footer,
+        .app-content .dataTables_wrapper .purchase-table-footer {
+            margin-top: 16px !important;
+            padding: 0 4px !important;
+        }
+        .app-content .dataTables_wrapper .pagination {
+            margin-bottom: 0;
+        }
+        .app-content .dataTables_wrapper .page-link {
+            border-radius: 10px;
+        }
+        .app-content .dataTables_wrapper .page-item.active .page-link {
+            background: #1b84ff;
+            border-color: #1b84ff;
+        }
+        .app-content .gh-action-group,
+        .app-content .finance-action-group {
+            display: inline-flex;
+            gap: 6px;
+            justify-content: flex-end;
+            align-items: center;
+        }
+        .app-content .gh-action-btn,
+        .app-content .finance-action-btn {
+            width: 36px;
+            height: 36px;
+            border-radius: 10px;
+            border: 0;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            transition: transform .15s ease, box-shadow .15s ease;
+        }
+        .app-content .gh-action-btn:hover,
+        .app-content .finance-action-btn:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 8px 18px rgba(15, 23, 42, .08);
+        }
+        .app-content .gh-action-btn i,
+        .app-content .finance-action-btn i {
+            color: currentColor !important;
+            font-size: 18px !important;
+        }
+        .app-content .gh-action-view,
+        .app-content .finance-action-view { background: #e8f3ff; color: #1682ff; }
+        .app-content .gh-action-edit,
+        .app-content .finance-action-edit { background: #fff3d8; color: #ff9f0a; }
+        .app-content .gh-action-approve,
+        .app-content .finance-action-approve { background: #e7f8ef; color: #12a150; }
+        .app-content .gh-action-reject,
+        .app-content .gh-action-delete,
+        .app-content .finance-action-reject,
+        .app-content .finance-action-delete { background: #ffecef; color: #f1416c; }
+        .app-content table .btn.btn-icon.btn-sm {
+            width: 36px;
+            height: 36px;
+            border-radius: 10px;
+            border: 0;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            transition: transform .15s ease, box-shadow .15s ease;
+        }
+        .app-content table .btn.btn-icon.btn-sm:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 8px 18px rgba(15, 23, 42, .08);
+        }
+        .app-content table .btn.btn-icon.btn-sm i {
+            color: currentColor !important;
+            font-size: 18px !important;
+        }
+        .app-content table .btn.btn-icon.btn-sm.btn-info,
+        .app-content table .btn.btn-icon.btn-sm.btn-primary {
+            background: #e8f3ff !important;
+            color: #1682ff !important;
+        }
+        .app-content table .btn.btn-icon.btn-sm.btn-warning {
+            background: #fff3d8 !important;
+            color: #ff9f0a !important;
+        }
+        .app-content table .btn.btn-icon.btn-sm.btn-success {
+            background: #e7f8ef !important;
+            color: #12a150 !important;
+        }
+        .app-content table .btn.btn-icon.btn-sm.btn-danger {
+            background: #ffecef !important;
+            color: #f1416c !important;
+        }
+        #kt_app_toolbar .btn.btn-sm.btn-primary {
+            display: inline-flex;
+            align-items: center;
+            gap: .5rem;
         }
     </style>
 
@@ -144,6 +359,30 @@
     <script src="{{ asset('assets/plugins/global/plugins.bundle.js') }}"></script>
     <script src="{{ asset('assets/js/scripts.bundle.js') }}"></script>
     <script src="{{ asset('assets/plugins/custom/datatables/datatables.bundle.js') }}"></script>
+    <script>
+        if (window.jQuery && $.fn.dataTable) {
+            $.extend(true, $.fn.dataTable.defaults, {
+                dom: "<'d-none'B><'row'<'col-sm-12'tr>><'row mt-3'<'col-sm-12 col-md-5 d-flex align-items-center'i><'col-sm-12 col-md-7 d-flex justify-content-end'p>>",
+                language: {
+                    zeroRecords: 'Data tidak ditemukan',
+                    info: 'Menampilkan _START_ - _END_ dari _TOTAL_ data',
+                    infoEmpty: 'Tidak ada data',
+                    infoFiltered: '(filter dari _MAX_ total data)',
+                    paginate: {
+                        first: '<i class="ki-duotone ki-double-left fs-4"></i>',
+                        last: '<i class="ki-duotone ki-double-right fs-4"></i>',
+                        next: '<i class="ki-duotone ki-right fs-4"></i>',
+                        previous: '<i class="ki-duotone ki-left fs-4"></i>'
+                    }
+                }
+            });
+        }
+
+        document.querySelectorAll('#kt_app_toolbar .ki-plus-square').forEach(function(icon) {
+            icon.classList.remove('ki-plus-square');
+            icon.classList.add('ki-plus-circle');
+        });
+    </script>
 
     @stack('scripts')
 </body>

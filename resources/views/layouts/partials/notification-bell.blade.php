@@ -35,9 +35,10 @@
                                 </span>
                             </div>
                             <div class="mb-0 me-2">
-                                <a href="{{ $notif->data['url'] ?? '#' }}" class="fs-6 text-gray-800 text-hover-primary fw-bold">
+                                <a href="{{ route('notifications.read', $notif) }}" onclick="event.preventDefault(); document.getElementById('notif-read-{{ $notif->id }}').submit();" class="fs-6 text-gray-800 text-hover-primary fw-bold">
                                     {{ $notif->data['title'] ?? 'Notifikasi' }}
                                 </a>
+                                <form id="notif-read-{{ $notif->id }}" method="POST" action="{{ route('notifications.read', $notif) }}" class="d-none">@csrf</form>
                                 <div class="text-gray-500 fs-7">{{ $notif->data['message'] ?? '' }}</div>
                             </div>
                         </div>
@@ -51,7 +52,7 @@
             </div>
 
             <div class="py-3 text-center border-top">
-                <a href="#" class="btn btn-color-gray-600 btn-active-color-primary">
+                <a href="{{ route('notifications.index') }}" class="btn btn-color-gray-600 btn-active-color-primary">
                     Lihat Semua
                     <i class="ki-outline ki-arrow-right fs-5"></i>
                 </a>

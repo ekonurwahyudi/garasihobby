@@ -18,7 +18,7 @@
     </a>
     @can('purchases.approve')
         @if($summary->status === 'menunggu_approval')
-            <form action="{{ route('material-purchases.accept', $summary->invoice_number) }}" method="POST" class="d-inline">
+            <form action="{{ route('material-purchases.accept', $summary->invoice_number) }}" method="POST" class="d-inline accept-purchase-form">
                 @csrf
                 <button type="submit" class="btn btn-sm btn-success">
                     <i class="ki-duotone ki-check fs-3"></i> Accept
@@ -42,6 +42,13 @@
 @endsection
 
 @section('content')
+@php
+    $statusConfig = match($summary->status) {
+        'disetujui' => ['label' => 'Disetujui', 'badge' => 'badge-light-success', 'bg' => 'bg-light-success', 'text' => 'text-success', 'icon' => 'ki-check-circle'],
+        'ditolak' => ['label' => 'Ditolak', 'badge' => 'badge-light-danger', 'bg' => 'bg-light-danger', 'text' => 'text-danger', 'icon' => 'ki-cross-circle'],
+        default => ['label' => 'Awaiting', 'badge' => 'badge-light-warning', 'bg' => 'bg-light-warning', 'text' => 'text-warning', 'icon' => 'ki-time'],
+    };
+@endphp
 @if(session('success'))
 <div class="alert alert-success d-flex align-items-center p-5 mb-5">
     <i class="ki-duotone ki-shield-tick fs-2hx text-success me-4"><span class="path1"></span><span class="path2"></span></i>
@@ -64,67 +71,95 @@
 </div>
 @endif
 
-<div class="card card-flush mb-7">
-    <div class="card-header border-0 pt-6">
-        <div class="card-title">
-            <h2 class="fw-bold">Detail Pembelian Material</h2>
-        </div>
-    </div>
-    <div class="card-body pt-0">
-        <div class="row gy-5">
-            <div class="col-md-3">
-                <div class="text-muted fs-7">No. Transaksi</div>
-                <div class="fw-bold fs-5">{{ $summary->invoice_number }}</div>
-            </div>
-            <div class="col-md-3">
-                <div class="text-muted fs-7">Tanggal Kwitansi</div>
-                <div class="fw-bold fs-5">{{ $summary->purchase_date?->format('d/m/Y') ?? '-' }}</div>
-            </div>
-            <div class="col-md-3">
-                <div class="text-muted fs-7">Supplier</div>
-                <div class="fw-bold fs-5">{{ $summary->supplier ?? '-' }}</div>
-            </div>
-            <div class="col-md-3">
-                <div class="text-muted fs-7">Total</div>
-                <div class="fw-bold fs-5">Rp {{ number_format($summary->total_price, 0, ',', '.') }}</div>
-            </div>
-            <div class="col-md-3">
-                <div class="text-muted fs-7">Status</div>
-                <div class="fw-bold fs-5">
-                    @switch($summary->status)
-                        @case('menunggu_approval')
-                            <span class="badge badge-light-warning">Menunggu Approval</span>
-                            @break
-                        @case('ditolak')
-                            <span class="badge badge-light-danger">Ditolak</span>
-                            @break
-                        @case('disetujui')
-                            <span class="badge badge-light-success">Disetujui</span>
-                            @break
-                        @default
-                            <span class="badge badge-light">{{ $summary->status }}</span>
-                    @endswitch
+<div class="purchase-hero mb-7">
+    <div class="row g-0">
+        <div class="col-xl-8 purchase-hero-main">
+            <div class="d-flex align-items-start gap-4 mb-7">
+                <div class="purchase-status-icon {{ $statusConfig['bg'] }}">
+                    <i class="ki-outline {{ $statusConfig['icon'] }} fs-1 {{ $statusConfig['text'] }}"></i>
+                </div>
+                <div>
+                    <div class="purchase-number-pill mb-3">
+                        <i class="ki-duotone ki-parcel fs-5"><span class="path1"></span><span class="path2"></span></i>
+                        {{ $summary->invoice_number }}
+                    </div>
+                    <div class="d-flex flex-wrap align-items-center gap-3 mb-2">
+                        <h1 class="fw-bolder fs-2 text-gray-900 mb-0">Detail Pembelian Material</h1>
+                        <span class="badge {{ $statusConfig['badge'] }}">{{ $statusConfig['label'] }}</span>
+                    </div>
+                    <div class="text-gray-600">Pembelian dari {{ $summary->supplier ?? 'supplier belum diisi' }} pada {{ $summary->purchase_date?->format('d/m/Y') ?? '-' }}</div>
+                    <div class="purchase-meta-line">
+                        <span class="purchase-meta-chip">{{ $summary->item_count }} item</span>
+                        <span class="purchase-meta-chip">{{ $summary->evidence_files->count() }} eviden</span>
+                        <span class="purchase-meta-chip">{{ $summary->bank_name ? ($summary->bank_code . ' - ' . $summary->bank_name) : 'Bank belum dipilih' }}</span>
+                        <span class="purchase-meta-chip">{{ $summary->notes ? 'Ada catatan' : 'Tanpa catatan' }}</span>
+                    </div>
                 </div>
             </div>
-            <div class="col-md-3">
-                <div class="text-muted fs-7">Jumlah Item</div>
-                <div class="fw-bold fs-5">{{ $summary->item_count }} item</div>
-            </div>
-            <div class="col-md-6">
-                <div class="text-muted fs-7">Catatan</div>
-                <div class="fw-bold fs-5">{{ $summary->notes ?? '-' }}</div>
+            <div class="purchase-note-box">
+                <div class="text-muted fs-8 text-uppercase fw-semibold mb-1">Catatan</div>
+                <div class="fw-semibold text-gray-800">{{ $summary->notes ?? 'Tidak ada catatan tambahan.' }}</div>
             </div>
             @if($summary->status === 'ditolak')
-            <div class="col-md-12">
-                <div class="text-muted fs-7">Alasan Penolakan</div>
-                <div class="fw-bold fs-5 text-danger">{{ $summary->rejection_reason ?? '-' }}</div>
+            <div class="alert alert-danger mt-5 mb-0">
+                <div class="fw-bold mb-1">Alasan Penolakan</div>
+                <div>{{ $summary->rejection_reason ?? '-' }}</div>
             </div>
             @endif
+        </div>
+        <div class="col-xl-4">
+            <div class="purchase-total-panel h-100 d-flex flex-column justify-content-between">
+                <div class="position-relative">
+                    <div class="text-white-50 fs-8 text-uppercase fw-semibold mb-2">Total Pembelian</div>
+                    <div class="fw-bolder fs-1 text-white">Rp {{ number_format($summary->total_price, 0, ',', '.') }}</div>
+                    <div class="text-white-50 fs-8 mt-2">Mutasi uang keluar saat pembelian disetujui.</div>
+                </div>
+                <div class="position-relative mt-8">
+                    <div class="purchase-person-card mb-3">
+                        <div class="d-flex align-items-center gap-3">
+                            <span class="bank-logo-circle bg-white">
+                                @if($summary->bank_logo_url)
+                                    <img src="{{ $summary->bank_logo_url }}" alt="{{ $summary->bank_name ?? 'Bank' }}">
+                                @else
+                                    <span>{{ $summary->bank_logo_text ?? 'BNK' }}</span>
+                                @endif
+                            </span>
+                            <div class="min-w-0">
+                                <div class="label">Bank Pembayaran</div>
+                                <div class="value text-truncate">{{ $summary->bank_name ? ($summary->bank_code . ' - ' . $summary->bank_name) : '-' }}</div>
+                                <div class="text-white-50 fs-8 text-truncate">
+                                    {{ $summary->bank_account_name ?? '-' }}{{ $summary->bank_account_number ? ' / ' . $summary->bank_account_number : '' }}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="purchase-person-card mb-3">
+                        <div class="d-flex align-items-center gap-3">
+                            <span class="symbol symbol-38px"><span class="symbol-label bg-white"><i class="ki-outline ki-user fs-3 text-primary"></i></span></span>
+                            <div>
+                                <div class="label">Diajukan Oleh</div>
+                                <div class="value">{{ $summary->submitter_name ?? '-' }}</div>
+                                <div class="text-white-50 fs-8">{{ $summary->submitted_at?->format('d/m/Y H:i') ?? '-' }}</div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="purchase-person-card">
+                        <div class="d-flex align-items-center gap-3">
+                            <span class="symbol symbol-38px"><span class="symbol-label bg-white"><i class="ki-outline ki-shield-tick fs-3 text-primary"></i></span></span>
+                            <div>
+                                <div class="label">Diproses Oleh</div>
+                                <div class="value">{{ $summary->processor_name ?? '-' }}</div>
+                                <div class="text-white-50 fs-8">{{ $summary->processed_at?->format('d/m/Y H:i') ?? '-' }}</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
         </div>
     </div>
 </div>
 
-<div class="card card-flush mb-5">
+<div class="card card-flush purchase-section-card mb-5">
     <div class="card-header border-0 pt-4">
         <div class="card-title">
             <h4 class="fw-bold mb-0">Item Pembelian</h4>
@@ -132,7 +167,7 @@
     </div>
     <div class="card-body pt-0 pb-4">
         <div class="table-responsive">
-            <table class="table table-sm table-striped table-row-bordered gy-3 gs-4 border rounded fs-7 mb-0">
+            <table class="table table-row-bordered gy-4 gs-5 border rounded fs-7 mb-0 purchase-table">
                 <thead>
                     <tr class="fw-semibold text-gray-800">
                         <th class="w-50px">No</th>
@@ -166,7 +201,7 @@
     </div>
 </div>
 
-<div class="card card-flush">
+<div class="card card-flush purchase-section-card">
     <div class="card-header border-0 pt-6">
         <div class="card-title">
             <h3 class="fw-bold">Eviden Pembelian</h3>
@@ -178,14 +213,22 @@
                 @foreach($summary->evidence_files as $evidence)
                     <div class="col-md-6 col-xl-4">
                         @if($evidence->is_image)
-                            <a href="{{ $evidence->url }}" target="_blank" class="d-block border rounded bg-light p-3 h-100">
-                                <img src="{{ $evidence->url }}" alt="Eviden pembelian" class="rounded d-block mx-auto" style="width:100%; height:260px; object-fit:contain;">
+                            <a href="{{ $evidence->url }}" target="_blank" class="purchase-evidence-tile d-block">
+                                <div class="purchase-evidence-frame mb-3">
+                                    <img src="{{ $evidence->url }}" alt="Eviden pembelian" class="w-100 h-100" style="object-fit:contain;">
+                                </div>
+                                <div class="fw-semibold text-gray-800 text-truncate">{{ $evidence->name }}</div>
                             </a>
                         @else
-                            <div class="border rounded overflow-hidden">
-                                <iframe src="{{ $evidence->url }}" class="w-100 border-0" style="height:260px;"></iframe>
+                            <div class="purchase-evidence-tile">
+                                <div class="purchase-evidence-frame mb-3">
+                                    <iframe src="{{ $evidence->url }}" class="w-100 h-100 border-0"></iframe>
+                                </div>
+                                <div class="d-flex justify-content-between align-items-center gap-3">
+                                    <div class="fw-semibold text-gray-800 text-truncate">{{ $evidence->name }}</div>
+                                    <a href="{{ $evidence->url }}" target="_blank" class="btn btn-sm btn-light-primary">Buka</a>
+                                </div>
                             </div>
-                            <a href="{{ $evidence->url }}" target="_blank" class="btn btn-sm btn-light-primary mt-2">Buka PDF</a>
                         @endif
                     </div>
                 @endforeach
@@ -221,8 +264,59 @@
 </div>
 @endsection
 
+@push('styles')
+<style>
+.purchase-hero{border:1px solid #e4e8f0;border-radius:20px;overflow:hidden;box-shadow:0 16px 42px rgba(15,23,42,.06);background:#fff}
+.purchase-hero-main{background:linear-gradient(135deg,#f8fbff 0%,#fff 62%);padding:28px}
+.purchase-status-icon{width:62px;height:62px;border-radius:18px;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.purchase-number-pill{display:inline-flex;align-items:center;gap:8px;border:1px solid #dfe6f2;background:#fff;border-radius:999px;padding:7px 12px;font-size:12px;font-weight:700;color:#334155}
+.purchase-meta-line{display:flex;flex-wrap:wrap;gap:10px;margin-top:14px}
+.purchase-meta-chip{display:inline-flex;align-items:center;border:1px solid #e4e8f0;background:#fff;border-radius:999px;padding:8px 12px;color:#475569;font-size:12px;font-weight:600}
+.purchase-note-box{border:1px dashed #d8e1ef;border-radius:14px;background:#fff;padding:18px}
+.purchase-total-panel{padding:28px;background:linear-gradient(155deg,#0f172a,#1e293b);position:relative;overflow:hidden}
+.purchase-total-panel::after{content:"";position:absolute;width:150px;height:150px;right:-54px;top:-54px;border-radius:50%;background:rgba(255,255,255,.08)}
+.purchase-person-card{border:1px solid rgba(255,255,255,.12);border-radius:14px;padding:14px;background:rgba(255,255,255,.06);position:relative}
+.purchase-person-card .label{color:#cbd5e1;font-size:11px;text-transform:uppercase;letter-spacing:.02em}
+.purchase-person-card .value{color:#fff;font-weight:700}
+.bank-logo-circle{width:38px;height:38px;border-radius:12px;display:flex;align-items:center;justify-content:center;flex-shrink:0;overflow:hidden}
+.bank-logo-circle img{max-width:30px;max-height:22px;object-fit:contain}
+.bank-logo-circle span{font-size:11px;font-weight:800;color:#1d4ed8}
+.purchase-section-card{border:1px solid #e4e8f0;border-radius:18px;box-shadow:0 12px 30px rgba(15,23,42,.045)}
+.purchase-table thead th{background:#f3f6fa;color:#061535;font-weight:700;white-space:nowrap}
+.purchase-table tbody td{vertical-align:middle}
+.purchase-evidence-tile{border:1px solid #e4e8f0;border-radius:16px;background:#fff;padding:12px;height:100%;transition:transform .15s ease,box-shadow .15s ease}
+.purchase-evidence-tile:hover{transform:translateY(-2px);box-shadow:0 14px 30px rgba(15,23,42,.08)}
+.purchase-evidence-frame{height:240px;border-radius:12px;background:#f8fafc;overflow:hidden;display:flex;align-items:center;justify-content:center}
+</style>
+@endpush
+
 @push('scripts')
 <script>
+document.querySelectorAll('.accept-purchase-form').forEach(function(form) {
+    form.addEventListener('submit', function(e) {
+        var button = form.querySelector('button[type="submit"]');
+
+        if (!window.Swal) {
+            if (button) button.disabled = true;
+            return;
+        }
+
+        e.preventDefault();
+        Swal.fire({
+            title: 'Accept Pembelian?',
+            text: 'Stok material dan mutasi uang keluar akan otomatis diproses.',
+            icon: 'question',
+            showCancelButton: true,
+            confirmButtonText: 'Ya, accept',
+            cancelButtonText: 'Batal'
+        }).then(function(result) {
+            if (!result.isConfirmed) return;
+            if (button) button.disabled = true;
+            form.submit();
+        });
+    });
+});
+
 function deleteTransaction(transaction) {
     Swal.fire({
         title: 'Hapus Pembelian?',

@@ -88,6 +88,7 @@ class RolePermissionSeeder extends Seeder
             'finance-transactions.view',
             'finance-transactions.edit',
             'finance-transactions.delete',
+            'finance-transactions.approve',
 
             // Notifikasi
             'notifications.view',

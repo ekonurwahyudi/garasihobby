@@ -57,16 +57,32 @@
 @endphp
 
 <div class="order-hero mb-7">
-    <div class="d-flex flex-wrap justify-content-between align-items-start gap-5">
-        <div>
-            <div class="text-muted fs-7 mb-2">No Order</div>
-            <div class="fw-bold fs-1 text-gray-900">{{ $order->order_number }}</div>
-            <div class="text-muted mt-2">{{ $order->order_date->format('d/m/Y') }} oleh {{ $order->creator->name ?? '-' }}</div>
+    <div class="d-flex flex-column flex-lg-row justify-content-between align-items-start gap-6">
+        <div class="d-flex align-items-start gap-4">
+            <div class="order-status-icon {{ $status['class'] }}">
+                <i class="ki-duotone ki-notepad fs-1"><span class="path1"></span><span class="path2"></span></i>
+            </div>
+            <div>
+                <div class="order-number-pill mb-3">
+                    <i class="ki-duotone ki-wrench fs-5"><span class="path1"></span><span class="path2"></span></i>
+                    {{ $order->order_number }}
+                </div>
+                <div class="d-flex flex-wrap align-items-center gap-3 mb-2">
+                    <h1 class="fw-bolder fs-2 text-gray-900 mb-0">Detail Order Bengkel</h1>
+                    <span class="badge {{ $status['class'] }}">{{ $status['label'] }}</span>
+                </div>
+                <div class="text-gray-600">{{ $order->order_date->format('d/m/Y') }} oleh {{ $order->creator->name ?? '-' }}</div>
+                <div class="order-meta-line">
+                    <span class="order-meta-chip"><i class="ki-duotone ki-user fs-5"><span class="path1"></span><span class="path2"></span></i>{{ $order->customer->name ?? '-' }}</span>
+                    <span class="order-meta-chip">{{ $order->vehicle->plate_number ?? '-' }}</span>
+                    <span class="order-meta-chip">{{ trim(($order->vehicle->brand ?? '') . ' ' . ($order->vehicle->model ?? '') . ' ' . ($order->vehicle->year ?? '')) ?: '-' }}</span>
+                </div>
+            </div>
         </div>
-        <div class="text-end">
-            <span class="badge {{ $status['class'] }} fs-6 mb-3">{{ $status['label'] }}</span>
-            <div class="fw-bold fs-2 text-primary">Rp {{ number_format($order->total, 0, ',', '.') }}</div>
-            <div class="text-muted fs-8">Total order</div>
+        <div class="order-total-panel">
+            <div class="text-white-50 fs-8 text-uppercase fw-semibold mb-2">Total Order</div>
+            <div class="fw-bolder fs-1 text-white">Rp {{ number_format($order->total, 0, ',', '.') }}</div>
+            <div class="text-white-50 fs-8 mt-2">{{ $order->paid_at ? 'Dibayar ' . $order->paid_at->format('d/m/Y H:i') : 'Status pembayaran mengikuti order' }}</div>
         </div>
     </div>
 </div>
@@ -257,18 +273,78 @@
 @push('styles')
 <style>
 .order-hero {
-    border: 1px solid #eff2f5;
-    border-radius: 8px;
-    background: linear-gradient(135deg, #f8fbff 0%, #ffffff 70%);
+    border: 1px solid #e4e8f0;
+    border-radius: 20px;
+    background: linear-gradient(135deg, #f8fbff 0%, #ffffff 62%);
     padding: 28px;
+    box-shadow: 0 16px 42px rgba(15, 23, 42, .06);
+    overflow: hidden;
+}
+.order-status-icon {
+    width: 62px;
+    height: 62px;
+    border-radius: 18px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+}
+.order-number-pill {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    border: 1px solid #dfe6f2;
+    background: #fff;
+    border-radius: 999px;
+    padding: 7px 12px;
+    font-size: 12px;
+    font-weight: 700;
+    color: #334155;
+}
+.order-meta-line {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    margin-top: 14px;
+}
+.order-meta-chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 7px;
+    border: 1px solid #e4e8f0;
+    background: #fff;
+    border-radius: 999px;
+    padding: 8px 12px;
+    color: #475569;
+    font-size: 12px;
+    font-weight: 600;
+}
+.order-total-panel {
+    min-width: 280px;
+    border-radius: 18px;
+    padding: 24px;
+    background: linear-gradient(155deg, #0f172a, #1e293b);
+    position: relative;
+    overflow: hidden;
+}
+.order-total-panel::after {
+    content: "";
+    position: absolute;
+    width: 130px;
+    height: 130px;
+    right: -48px;
+    top: -48px;
+    border-radius: 50%;
+    background: rgba(255,255,255,.08);
 }
 .info-tile,
 .mini-stat {
-    border: 1px solid #eff2f5;
-    border-radius: 8px;
+    border: 1px solid #e4e8f0;
+    border-radius: 16px;
     padding: 16px;
     height: 100%;
     background: #fff;
+    box-shadow: 0 8px 22px rgba(15, 23, 42, .035);
 }
 .mini-stat span {
     display: block;
@@ -280,11 +356,12 @@
     color: #181c32;
 }
 .evidence-panel {
-    border: 1px solid #eff2f5;
-    border-radius: 8px;
+    border: 1px solid #e4e8f0;
+    border-radius: 16px;
     min-height: 150px;
     padding: 18px;
     background: #fff;
+    box-shadow: 0 8px 22px rgba(15, 23, 42, .035);
 }
 .evidence-link {
     display: block;
@@ -308,10 +385,11 @@
     gap: 12px;
 }
 .total-box {
-    border: 1px solid #eff2f5;
-    border-radius: 8px;
-    background: #fff;
+    border: 1px solid #e4e8f0;
+    border-radius: 18px;
+    background: linear-gradient(180deg, #fff, #f8fbff);
     padding: 18px;
+    box-shadow: 0 12px 30px rgba(15, 23, 42, .045);
 }
 .total-row {
     display: flex;

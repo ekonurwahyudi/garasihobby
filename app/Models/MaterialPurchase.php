@@ -30,6 +30,8 @@ class MaterialPurchase extends Model
         'rejected_by',
         'rejected_at',
         'rejection_reason',
+        'bank_account_id',
+        'finance_transaction_id',
     ];
 
     protected $casts = [
@@ -45,5 +47,30 @@ class MaterialPurchase extends Model
     public function material(): BelongsTo
     {
         return $this->belongsTo(Material::class);
+    }
+
+    public function financeTransaction(): BelongsTo
+    {
+        return $this->belongsTo(FinanceTransaction::class);
+    }
+
+    public function bankAccount(): BelongsTo
+    {
+        return $this->belongsTo(BankAccount::class);
+    }
+
+    public function submitter(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'submitted_by');
+    }
+
+    public function approver(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'approved_by');
+    }
+
+    public function rejecter(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'rejected_by');
     }
 }

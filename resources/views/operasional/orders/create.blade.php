@@ -382,7 +382,25 @@
     {{-- Section Total --}}
     <div class="card card-flush mb-7">
         <div class="card-body">
-            <div class="row justify-content-end">
+            <div class="row align-items-start g-5">
+                <div class="col-md-5">
+                    <label class="form-label fw-semibold">Pembayaran Masuk Ke</label>
+                    <select id="bank_account_id" class="form-select bank-account-select" data-placeholder="Pilih Bank/Cash">
+                        <option value="">-- Pilih Bank/Cash --</option>
+                        @foreach($bankAccounts as $account)
+                            <option value="{{ $account->id }}"
+                                data-logo-url="{{ $account->logo_url }}"
+                                data-logo-text="{{ $account->logo_text }}"
+                                data-bank-name="{{ $account->bank_name }}"
+                                data-bank-code="{{ $account->code }}"
+                                data-bank-balance="Rp {{ number_format($account->balance, 0, ',', '.') }}">
+                                {{ $account->code }} - {{ $account->bank_name }}
+                            </option>
+                        @endforeach
+                    </select>
+                    <div class="form-text">Wajib saat status Selesai. Mutasi otomatis tercatat sebagai uang masuk.</div>
+                </div>
+                <div class="col-md-2"></div>
                 <div class="col-md-5">
                     <table class="table table-borderless">
                         <tr>
@@ -614,6 +632,30 @@
 
 @push('scripts')
 <script>
+function bankOptionTemplate(option) {
+    if (!option.id) return option.text;
+
+    var el = option.element;
+    var logoUrl = el.getAttribute('data-logo-url');
+    var logoText = el.getAttribute('data-logo-text') || 'BNK';
+    var bankName = el.getAttribute('data-bank-name') || option.text;
+    var bankCode = el.getAttribute('data-bank-code') || '';
+    var balance = el.getAttribute('data-bank-balance') || '';
+    var logo = logoUrl
+        ? '<img src="' + logoUrl + '" alt="' + bankName.replace(/"/g, '&quot;') + '">'
+        : '<span>' + logoText + '</span>';
+
+    return $(
+        '<div class="bank-select-option">' +
+            '<div class="bank-select-logo">' + logo + '</div>' +
+            '<div class="bank-select-text">' +
+                '<div class="name">' + bankCode + ' - ' + bankName + '</div>' +
+                '<div class="meta">Saldo ' + balance + '</div>' +
+            '</div>' +
+        '</div>'
+    );
+}
+
 var selectedCustomerId = null;
 var selectedVehicleId = null;
 var selectedVehicleSize = 'small';
@@ -760,6 +802,13 @@ $(document).ready(function() {
         placeholder: 'Pilih mekanik...',
         allowClear: true,
         width: '100%'
+    });
+
+    $('.bank-account-select').select2({
+        width: '100%',
+        templateResult: bankOptionTemplate,
+        templateSelection: bankOptionTemplate,
+        escapeMarkup: function(markup) { return markup; }
     });
 
     $('#mechanic').on('change', function() {
@@ -1066,6 +1115,7 @@ function submitOrder(status) {
     fd.append('discount', formData.discount);
     fd.append('other_service_price', formData.other_service_price);
     fd.append('status', formData.status);
+    fd.append('bank_account_id', $('#bank_account_id').val() || '');
 
     formData.items.forEach(function(item, i) {
         Object.keys(item).forEach(function(key) { fd.append('items[' + i + '][' + key + ']', item[key]); });
@@ -1176,7 +1226,15 @@ setVehicleSize('small');
 
 @push('styles')
 <style>
-@media print {
+    .bank-select-option{display:flex;align-items:center;gap:10px;min-width:0}
+    .bank-select-logo{width:32px;height:32px;border:1px solid #dfe6f2;border-radius:9px;background:#fff;display:flex;align-items:center;justify-content:center;flex-shrink:0;overflow:hidden}
+    .bank-select-logo img{max-width:26px;max-height:18px;object-fit:contain}
+    .bank-select-logo span{font-size:10px;font-weight:800;color:#1d4ed8}
+    .bank-select-text{min-width:0;line-height:1.25}
+    .bank-select-text .name{font-weight:700;color:#1f2937;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+    .bank-select-text .meta{font-size:11px;color:#7e8299;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+
+    @media print {
     @page { size: A4; margin: 10mm; }
 
     /* Hide semua UI chrome */

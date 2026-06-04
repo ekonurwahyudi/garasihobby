@@ -34,9 +34,37 @@
 @endsection
 
 @section('content')
+<div class="customer-hero mb-7">
+    <div class="d-flex flex-column flex-lg-row justify-content-between align-items-start gap-6">
+        <div class="d-flex align-items-start gap-4">
+            <div class="customer-avatar">
+                {{ strtoupper(substr($customer->name, 0, 1)) }}
+            </div>
+            <div>
+                <div class="customer-number-pill mb-3">
+                    <i class="ki-duotone ki-user fs-5"><span class="path1"></span><span class="path2"></span></i>
+                    Pelanggan Garasi Hobby
+                </div>
+                <h1 class="fw-bolder fs-2 text-gray-900 mb-2">{{ $customer->name }}</h1>
+                <div class="text-gray-600">Detail pemilik dan kendaraan yang terdaftar.</div>
+                <div class="customer-meta-line">
+                    <span class="customer-meta-chip">{{ $customer->phone }}</span>
+                    <span class="customer-meta-chip">{{ $customer->email ?? 'Email belum diisi' }}</span>
+                    <span class="customer-meta-chip">{{ $customer->vehicles->count() }} kendaraan</span>
+                </div>
+            </div>
+        </div>
+        <div class="customer-total-panel">
+            <div class="text-white-50 fs-8 text-uppercase fw-semibold mb-2">Total Kendaraan</div>
+            <div class="fw-bolder fs-1 text-white">{{ $customer->vehicles->count() }}</div>
+            <div class="text-white-50 fs-8 mt-2">Kendaraan aktif di data pelanggan.</div>
+        </div>
+    </div>
+</div>
+
 <div class="row g-7">
     <div class="col-xl-4">
-        <div class="card card-flush h-100">
+        <div class="card card-flush h-100 customer-section-card">
             <div class="card-header pt-6">
                 <div class="card-title">
                     <h2 class="fw-bold mb-0">Data Pemilik</h2>
@@ -44,8 +72,8 @@
             </div>
             <div class="card-body pt-0">
                 <div class="d-flex align-items-center mb-7">
-                    <div class="symbol symbol-60px symbol-circle bg-light-primary me-4">
-                        <span class="symbol-label fw-bold fs-2 text-primary">{{ strtoupper(substr($customer->name, 0, 1)) }}</span>
+                    <div class="customer-avatar customer-avatar-sm me-4">
+                        {{ strtoupper(substr($customer->name, 0, 1)) }}
                     </div>
                     <div>
                         <div class="fw-bold fs-4 text-gray-900">{{ $customer->name }}</div>
@@ -71,7 +99,7 @@
     </div>
 
     <div class="col-xl-8">
-        <div class="card card-flush">
+        <div class="card card-flush customer-section-card">
             <div class="card-header pt-6">
                 <div class="card-title">
                     <h2 class="fw-bold mb-0">Data Kendaraan</h2>
@@ -80,15 +108,15 @@
             <div class="card-body pt-0">
                 @forelse($customer->vehicles as $vehicle)
                     @php($photoUrl = $vehicle->photo_path ? Storage::disk('r2')->url($vehicle->photo_path) : null)
-                    <div class="customer-vehicle-panel border rounded p-5 {{ !$loop->last ? 'mb-5' : '' }}">
+                    <div class="customer-vehicle-panel p-5 {{ !$loop->last ? 'mb-5' : '' }}">
                         <div class="row g-5 align-items-stretch">
                             <div class="col-md-5">
                                 @if($photoUrl)
-                                    <a href="{{ $photoUrl }}" target="_blank" class="d-block border rounded overflow-hidden bg-light h-100">
+                                    <a href="{{ $photoUrl }}" target="_blank" class="d-block customer-vehicle-photo-wrap h-100">
                                         <img src="{{ $photoUrl }}" alt="Foto {{ $vehicle->plate_number }}" class="w-100 h-100 customer-vehicle-photo">
                                     </a>
                                 @else
-                                    <div class="border rounded bg-light d-flex flex-column align-items-center justify-content-center h-100 customer-vehicle-empty">
+                                    <div class="customer-vehicle-empty d-flex flex-column align-items-center justify-content-center h-100">
                                         <i class="ki-duotone ki-car fs-3x text-gray-500 mb-3"><span class="path1"></span><span class="path2"></span></i>
                                         <div class="text-muted fw-semibold">Belum ada foto mobil</div>
                                     </div>
@@ -149,6 +177,84 @@
 
 @push('styles')
 <style>
+.customer-hero {
+    border: 1px solid #e4e8f0;
+    border-radius: 20px;
+    background: linear-gradient(135deg, #f8fbff 0%, #ffffff 62%);
+    padding: 28px;
+    box-shadow: 0 16px 42px rgba(15,23,42,.06);
+}
+.customer-avatar {
+    width: 68px;
+    height: 68px;
+    border-radius: 20px;
+    background: linear-gradient(135deg, #eff6ff, #dbeafe);
+    color: #1b84ff;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 28px;
+    font-weight: 900;
+    flex-shrink: 0;
+}
+.customer-avatar-sm {
+    width: 58px;
+    height: 58px;
+    border-radius: 18px;
+    font-size: 24px;
+}
+.customer-number-pill {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    border: 1px solid #dfe6f2;
+    background: #fff;
+    border-radius: 999px;
+    padding: 7px 12px;
+    font-size: 12px;
+    font-weight: 700;
+    color: #334155;
+}
+.customer-meta-line {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    margin-top: 14px;
+}
+.customer-meta-chip {
+    display: inline-flex;
+    align-items: center;
+    border: 1px solid #e4e8f0;
+    background: #fff;
+    border-radius: 999px;
+    padding: 8px 12px;
+    color: #475569;
+    font-size: 12px;
+    font-weight: 600;
+}
+.customer-total-panel {
+    min-width: 240px;
+    border-radius: 18px;
+    padding: 24px;
+    background: linear-gradient(155deg, #0f172a, #1e293b);
+    position: relative;
+    overflow: hidden;
+}
+.customer-total-panel::after {
+    content: "";
+    position: absolute;
+    width: 130px;
+    height: 130px;
+    right: -48px;
+    top: -48px;
+    border-radius: 50%;
+    background: rgba(255,255,255,.08);
+}
+.customer-section-card {
+    border: 1px solid #e4e8f0;
+    border-radius: 18px;
+    box-shadow: 0 12px 30px rgba(15,23,42,.045);
+}
 .customer-vehicle-photo,
 .customer-vehicle-empty {
     min-height: 260px;
@@ -157,6 +263,16 @@
 
 .customer-vehicle-panel {
     background: #fff;
+    border: 1px solid #e4e8f0;
+    border-radius: 18px;
+    box-shadow: 0 10px 24px rgba(15,23,42,.04);
+}
+.customer-vehicle-photo-wrap,
+.customer-vehicle-empty {
+    border: 1px solid #e4e8f0;
+    border-radius: 16px;
+    overflow: hidden;
+    background: #f8fafc;
 }
 </style>
 @endpush
