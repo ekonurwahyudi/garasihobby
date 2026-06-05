@@ -162,6 +162,14 @@
                         </a>
                     </div>
                 @endif
+                @if($relatedDebtReceivable)
+                    <div class="align-self-md-start">
+                        <a href="{{ route('debt-receivables.show', $relatedDebtReceivable) }}" class="btn btn-light-info finance-order-link">
+                            <i class="ki-duotone ki-arrows-circle fs-3"><span class="path1"></span><span class="path2"></span></i>
+                            Lihat Detail Hutang/Piutang
+                        </a>
+                    </div>
+                @endif
             </div>
 
             <div class="row g-4">

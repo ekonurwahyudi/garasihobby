@@ -101,6 +101,8 @@ class RoleController extends Controller
             ],
             'Keuangan' => [
                 ['page' => 'finance-transactions', 'label' => 'Input Keuangan', 'modules' => ['finance-transactions'], 'actions' => []],
+                ['page' => 'asset-purchases', 'label' => 'Pembelian Aset', 'modules' => ['asset-purchases'], 'actions' => []],
+                ['page' => 'debt-receivables', 'label' => 'Hutang Piutang', 'modules' => ['debt-receivables'], 'actions' => []],
             ],
             'Pengaturan' => [
                 ['page' => 'notifications', 'label' => 'Notifikasi', 'modules' => ['notifications'], 'actions' => []],

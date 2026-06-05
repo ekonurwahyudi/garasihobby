@@ -214,7 +214,7 @@
                     @endcan
 
                     @can('finance-master.view')
-                    <div data-kt-menu-trigger="click" class="menu-item menu-accordion {{ request()->routeIs('finance-categories.*', 'finance-items.*') ? 'here show' : '' }}">
+                    <div data-kt-menu-trigger="click" class="menu-item menu-accordion {{ request()->routeIs('finance-categories.*', 'finance-items.*', 'asset-categories.*', 'debt-receivable-categories.*') ? 'here show' : '' }}">
                         <span class="menu-link">
                             <span class="menu-icon"><i class="ki-duotone ki-dollar fs-2"><span class="path1"></span><span class="path2"></span><span class="path3"></span></i></span>
                             <span class="menu-title">Item Keuangan</span>
@@ -231,6 +231,18 @@
                                 <a class="menu-link {{ request()->routeIs('finance-categories.*') ? 'active' : '' }}" href="{{ route('finance-categories.index') }}">
                                     <span class="menu-bullet"><span class="bullet bullet-dot"></span></span>
                                     <span class="menu-title">Kategori Item</span>
+                                </a>
+                            </div>
+                            <div class="menu-item">
+                                <a class="menu-link {{ request()->routeIs('asset-categories.*') ? 'active' : '' }}" href="{{ route('asset-categories.index') }}">
+                                    <span class="menu-bullet"><span class="bullet bullet-dot"></span></span>
+                                    <span class="menu-title">Kategori Aset</span>
+                                </a>
+                            </div>
+                            <div class="menu-item">
+                                <a class="menu-link {{ request()->routeIs('debt-receivable-categories.*') ? 'active' : '' }}" href="{{ route('debt-receivable-categories.index') }}">
+                                    <span class="menu-bullet"><span class="bullet bullet-dot"></span></span>
+                                    <span class="menu-title">Kategori Hutang Piutang</span>
                                 </a>
                             </div>
                         </div>
@@ -322,7 +334,7 @@
                     <!--end:Menu item-->
                     @endcan
 
-                    @canany(['finance-transactions.view', 'bank-accounts.view'])
+                    @canany(['finance-transactions.view', 'bank-accounts.view', 'asset-purchases.view', 'debt-receivables.view'])
                     <div class="menu-item pt-5">
                         <div class="menu-content">
                             <span class="menu-heading fw-bold text-uppercase fs-7">Keuangan</span>
@@ -344,6 +356,24 @@
                         <a class="menu-link {{ request()->routeIs('finance-transactions.*') ? 'active' : '' }}" href="{{ route('finance-transactions.index') }}">
                             <span class="menu-icon"><i class="ki-duotone ki-wallet fs-2"><span class="path1"></span><span class="path2"></span><span class="path3"></span><span class="path4"></span></i></span>
                             <span class="menu-title">Input Keuangan</span>
+                        </a>
+                    </div>
+                    @endcan
+
+                    @can('asset-purchases.view')
+                    <div class="menu-item">
+                        <a class="menu-link {{ request()->routeIs('asset-purchases.*') ? 'active' : '' }}" href="{{ route('asset-purchases.index') }}">
+                            <span class="menu-icon"><i class="ki-duotone ki-briefcase fs-2"><span class="path1"></span><span class="path2"></span></i></span>
+                            <span class="menu-title">Pembelian Aset</span>
+                        </a>
+                    </div>
+                    @endcan
+
+                    @can('debt-receivables.view')
+                    <div class="menu-item">
+                        <a class="menu-link {{ request()->routeIs('debt-receivables.*') ? 'active' : '' }}" href="{{ route('debt-receivables.index') }}">
+                            <span class="menu-icon"><i class="ki-duotone ki-arrows-circle fs-2"><span class="path1"></span><span class="path2"></span></i></span>
+                            <span class="menu-title">Hutang Piutang</span>
                         </a>
                     </div>
                     @endcan

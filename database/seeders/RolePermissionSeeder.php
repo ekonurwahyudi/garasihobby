@@ -89,6 +89,16 @@ class RolePermissionSeeder extends Seeder
             'finance-transactions.edit',
             'finance-transactions.delete',
             'finance-transactions.approve',
+            'asset-purchases.create',
+            'asset-purchases.view',
+            'asset-purchases.edit',
+            'asset-purchases.delete',
+            'asset-purchases.approve',
+            'debt-receivables.create',
+            'debt-receivables.view',
+            'debt-receivables.edit',
+            'debt-receivables.delete',
+            'debt-receivables.approve',
 
             // Notifikasi
             'notifications.view',

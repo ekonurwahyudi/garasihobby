@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Finance;
 
 use App\Http\Controllers\Controller;
 use App\Models\BankAccount;
+use App\Models\DebtReceivable;
 use App\Models\FinanceCategory;
 use App\Models\FinanceItem;
 use App\Models\FinanceTransaction;
@@ -73,8 +74,9 @@ class FinanceTransactionController extends Controller
         $finance_transaction->load(['item.category', 'bankAccount', 'submitter', 'approver', 'rejecter']);
         $evidenceFiles = $this->evidenceFiles($finance_transaction);
         $relatedOrder = Order::where('finance_transaction_id', $finance_transaction->id)->first();
+        $relatedDebtReceivable = $this->relatedDebtReceivable($finance_transaction);
 
-        return view('finance.transactions.show', compact('finance_transaction', 'evidenceFiles', 'relatedOrder'));
+        return view('finance.transactions.show', compact('finance_transaction', 'evidenceFiles', 'relatedOrder', 'relatedDebtReceivable'));
     }
 
     public function edit(FinanceTransaction $finance_transaction): View
@@ -319,6 +321,21 @@ class FinanceTransactionController extends Controller
                 'name' => basename($path),
             ])
             ->values();
+    }
+
+    private function relatedDebtReceivable(FinanceTransaction $transaction): ?DebtReceivable
+    {
+        $fromPayment = DebtReceivable::whereHas('payments', fn ($query) => $query->where('finance_transaction_id', $transaction->id))->first();
+        if ($fromPayment) {
+            return $fromPayment;
+        }
+
+        $text = trim(($transaction->activity ?? '') . ' ' . ($transaction->description ?? ''));
+        if (preg_match('/HP-\d{2}-\d{5}/', $text, $match)) {
+            return DebtReceivable::where('transaction_number', $match[0])->first();
+        }
+
+        return null;
     }
 
     private function notifyFinanceApprovers(FinanceTransaction $transaction): void

@@ -1,10 +1,14 @@
 <?php
 
 use App\Http\Controllers\DashboardController;
+use App\Http\Controllers\Finance\AssetPurchaseController;
+use App\Http\Controllers\Finance\DebtReceivableController;
 use App\Http\Controllers\Finance\FinanceTransactionController;
+use App\Http\Controllers\Master\AssetCategoryController;
 use App\Http\Controllers\Master\BankAccountController;
 use App\Http\Controllers\Master\ChecklistCategoryController;
 use App\Http\Controllers\Master\ChecklistItemController;
+use App\Http\Controllers\Master\DebtReceivableCategoryController;
 use App\Http\Controllers\Master\FinanceCategoryController;
 use App\Http\Controllers\Master\FinanceItemController;
 use App\Http\Controllers\Master\MaterialCategoryController;
@@ -110,6 +114,18 @@ Route::middleware(['auth'])->group(function () {
         Route::get('/master/finance-items/{finance_item}/edit', [FinanceItemController::class, 'edit'])->middleware('can:finance-master.edit')->name('finance-items.edit');
         Route::put('/master/finance-items/{finance_item}', [FinanceItemController::class, 'update'])->middleware('can:finance-master.edit')->name('finance-items.update');
         Route::delete('/master/finance-items/{finance_item}', [FinanceItemController::class, 'destroy'])->middleware('can:finance-master.delete')->name('finance-items.destroy');
+
+        Route::get('/master/asset-categories', [AssetCategoryController::class, 'index'])->name('asset-categories.index');
+        Route::post('/master/asset-categories', [AssetCategoryController::class, 'store'])->middleware('can:finance-master.create')->name('asset-categories.store');
+        Route::get('/master/asset-categories/{asset_category}/edit', [AssetCategoryController::class, 'edit'])->middleware('can:finance-master.edit')->name('asset-categories.edit');
+        Route::put('/master/asset-categories/{asset_category}', [AssetCategoryController::class, 'update'])->middleware('can:finance-master.edit')->name('asset-categories.update');
+        Route::delete('/master/asset-categories/{asset_category}', [AssetCategoryController::class, 'destroy'])->middleware('can:finance-master.delete')->name('asset-categories.destroy');
+
+        Route::get('/master/debt-receivable-categories', [DebtReceivableCategoryController::class, 'index'])->name('debt-receivable-categories.index');
+        Route::post('/master/debt-receivable-categories', [DebtReceivableCategoryController::class, 'store'])->middleware('can:finance-master.create')->name('debt-receivable-categories.store');
+        Route::get('/master/debt-receivable-categories/{debt_receivable_category}/edit', [DebtReceivableCategoryController::class, 'edit'])->middleware('can:finance-master.edit')->name('debt-receivable-categories.edit');
+        Route::put('/master/debt-receivable-categories/{debt_receivable_category}', [DebtReceivableCategoryController::class, 'update'])->middleware('can:finance-master.edit')->name('debt-receivable-categories.update');
+        Route::delete('/master/debt-receivable-categories/{debt_receivable_category}', [DebtReceivableCategoryController::class, 'destroy'])->middleware('can:finance-master.delete')->name('debt-receivable-categories.destroy');
     });
 
     Route::middleware('can:bank-accounts.view')->group(function () {
@@ -180,6 +196,35 @@ Route::middleware(['auth'])->group(function () {
         Route::post('/keuangan/transaksi/{finance_transaction}/approve', [FinanceTransactionController::class, 'approve'])->middleware('can:finance-transactions.approve')->name('finance-transactions.approve');
         Route::post('/keuangan/transaksi/{finance_transaction}/reject', [FinanceTransactionController::class, 'reject'])->middleware('can:finance-transactions.approve')->name('finance-transactions.reject');
         Route::get('/keuangan/transaksi/{finance_transaction}', [FinanceTransactionController::class, 'show'])->name('finance-transactions.show');
+    });
+
+    // Keuangan - Pembelian Aset
+    Route::middleware('can:asset-purchases.view')->group(function () {
+        Route::get('/keuangan/pembelian-aset', [AssetPurchaseController::class, 'index'])->name('asset-purchases.index');
+        Route::get('/keuangan/pembelian-aset/create', [AssetPurchaseController::class, 'create'])->middleware('can:asset-purchases.create')->name('asset-purchases.create');
+        Route::post('/keuangan/pembelian-aset', [AssetPurchaseController::class, 'store'])->middleware('can:asset-purchases.create')->name('asset-purchases.store');
+        Route::get('/keuangan/pembelian-aset/{asset_purchase}/edit', [AssetPurchaseController::class, 'edit'])->middleware('can:asset-purchases.edit')->name('asset-purchases.edit');
+        Route::put('/keuangan/pembelian-aset/{asset_purchase}', [AssetPurchaseController::class, 'update'])->middleware('can:asset-purchases.edit')->name('asset-purchases.update');
+        Route::post('/keuangan/pembelian-aset/{asset_purchase}/approve', [AssetPurchaseController::class, 'approve'])->middleware('can:asset-purchases.approve')->name('asset-purchases.approve');
+        Route::post('/keuangan/pembelian-aset/{asset_purchase}/reject', [AssetPurchaseController::class, 'reject'])->middleware('can:asset-purchases.approve')->name('asset-purchases.reject');
+        Route::delete('/keuangan/pembelian-aset/{asset_purchase}', [AssetPurchaseController::class, 'destroy'])->middleware('can:asset-purchases.delete')->name('asset-purchases.destroy');
+        Route::get('/keuangan/pembelian-aset/{asset_purchase}', [AssetPurchaseController::class, 'show'])->name('asset-purchases.show');
+    });
+
+    // Keuangan - Hutang Piutang
+    Route::middleware('can:debt-receivables.view')->group(function () {
+        Route::get('/keuangan/hutang-piutang', [DebtReceivableController::class, 'index'])->name('debt-receivables.index');
+        Route::get('/keuangan/hutang-piutang/create', [DebtReceivableController::class, 'create'])->middleware('can:debt-receivables.create')->name('debt-receivables.create');
+        Route::post('/keuangan/hutang-piutang', [DebtReceivableController::class, 'store'])->middleware('can:debt-receivables.create')->name('debt-receivables.store');
+        Route::get('/keuangan/hutang-piutang/{debt_receivable}/edit', [DebtReceivableController::class, 'edit'])->middleware('can:debt-receivables.edit')->name('debt-receivables.edit');
+        Route::put('/keuangan/hutang-piutang/{debt_receivable}', [DebtReceivableController::class, 'update'])->middleware('can:debt-receivables.edit')->name('debt-receivables.update');
+        Route::post('/keuangan/hutang-piutang/{debt_receivable}/approve', [DebtReceivableController::class, 'approve'])->middleware('can:debt-receivables.approve')->name('debt-receivables.approve');
+        Route::post('/keuangan/hutang-piutang/{debt_receivable}/reject', [DebtReceivableController::class, 'reject'])->middleware('can:debt-receivables.approve')->name('debt-receivables.reject');
+        Route::post('/keuangan/hutang-piutang/{debt_receivable}/pay', [DebtReceivableController::class, 'pay'])->middleware('can:debt-receivables.edit')->name('debt-receivables.pay');
+        Route::put('/keuangan/hutang-piutang/{debt_receivable}/payments/{payment}', [DebtReceivableController::class, 'updatePayment'])->middleware('can:debt-receivables.edit')->name('debt-receivables.payments.update');
+        Route::delete('/keuangan/hutang-piutang/{debt_receivable}/payments/{payment}', [DebtReceivableController::class, 'destroyPayment'])->middleware('can:debt-receivables.delete')->name('debt-receivables.payments.destroy');
+        Route::delete('/keuangan/hutang-piutang/{debt_receivable}', [DebtReceivableController::class, 'destroy'])->middleware('can:debt-receivables.delete')->name('debt-receivables.destroy');
+        Route::get('/keuangan/hutang-piutang/{debt_receivable}', [DebtReceivableController::class, 'show'])->name('debt-receivables.show');
     });
 });
 

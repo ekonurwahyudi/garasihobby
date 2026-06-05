@@ -213,6 +213,38 @@
         .app-content .gh-action-delete,
         .app-content .finance-action-reject,
         .app-content .finance-action-delete { background: #ffecef; color: #f1416c; }
+        .app-content .finance-table-card {
+            border: 1px solid #e4e8f0;
+            border-radius: 14px;
+            box-shadow: 0 10px 30px rgba(15, 23, 42, 0.04);
+        }
+        .app-content .finance-table-wrap {
+            border: 1px solid #dfe5ef;
+            border-radius: 12px;
+            overflow: hidden;
+            background: #fff;
+        }
+        .app-content .finance-search {
+            border-color: #dfe5ef;
+            border-radius: 10px;
+            font-size: 13px;
+        }
+        .app-content .finance-table-footer {
+            padding: 16px 12px 4px;
+        }
+        .app-content .finance-table-footer .dataTables_info {
+            padding-top: 0 !important;
+        }
+        .app-content .finance-summary-card {
+            border: 1px solid #e4e8f0;
+            border-radius: 18px;
+            overflow: hidden;
+            box-shadow: 0 12px 28px rgba(15, 23, 42, 0.05);
+            position: relative;
+        }
+        .app-content .finance-summary-income { background: linear-gradient(135deg,#ecfdf3,#ffffff); }
+        .app-content .finance-summary-expense { background: linear-gradient(135deg,#fff1f2,#ffffff); }
+        .app-content .finance-summary-net { background: linear-gradient(135deg,#eff6ff,#ffffff); }
         .app-content table .btn.btn-icon.btn-sm {
             width: 36px;
             height: 36px;

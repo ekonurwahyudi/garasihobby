@@ -67,9 +67,14 @@ class BankAccountController extends Controller
             ->get()
             ->each(function ($transaction) use ($movements) {
                 $activity = $transaction->activity ?: $transaction->description;
-                $source = Str::startsWith($activity, 'Pembelian Material')
-                    ? 'Pembelian Material'
-                    : (Str::startsWith($activity, 'Pembayaran Order') ? 'Pembayaran Order' : 'Input Keuangan');
+                $source = match (true) {
+                    Str::startsWith($activity, 'Pembelian Material') => 'Pembelian Material',
+                    Str::startsWith($activity, 'Pembayaran Order') => 'Pembayaran Order',
+                    Str::startsWith($activity, 'Pembelian Aset') => 'Pembelian Aset',
+                    Str::startsWith($activity, 'Pembayaran Hutang') => 'Pembayaran Hutang',
+                    Str::startsWith($activity, 'Penerimaan Piutang') => 'Penerimaan Piutang',
+                    default => 'Input Keuangan',
+                };
                 $movements->push([
                     'date' => $transaction->transaction_date,
                     'reference' => $transaction->transaction_number,
