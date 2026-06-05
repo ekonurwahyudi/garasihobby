@@ -8,8 +8,8 @@
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <meta name="csrf-token" content="{{ csrf_token() }}" />
 
-    <link rel="icon" type="image/png" href="{{ asset('assets/media/logos.png') }}" />
-    <link rel="shortcut icon" type="image/png" href="{{ asset('assets/media/logos.png') }}" />
+    <link rel="icon" type="image/png" href="{{ asset('assets/media/favicon.png') }}" />
+    <link rel="shortcut icon" type="image/png" href="{{ asset('assets/media/favicon.png') }}" />
 
     {{-- Fonts --}}
     <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -253,6 +253,176 @@
             align-items: center;
             gap: .5rem;
         }
+        .modal .modal-content {
+            border: 0;
+            border-radius: 18px;
+            overflow: hidden;
+            box-shadow: 0 24px 70px rgba(15, 23, 42, .18);
+        }
+        .modal .modal-header {
+            min-height: 78px;
+            padding: 22px 28px;
+            border-bottom: 1px solid #edf1f7;
+            background: linear-gradient(135deg, #f8fbff 0%, #fff 72%);
+            align-items: center;
+        }
+        .modal .modal-header h2,
+        .modal .modal-title {
+            margin: 0;
+            color: #0f172a;
+            font-size: 20px;
+            font-weight: 800;
+            line-height: 1.25;
+        }
+        .modal .modal-header .btn.btn-icon {
+            width: 36px;
+            height: 36px;
+            border-radius: 12px;
+            background: #f1f5f9;
+            color: #64748b;
+        }
+        .modal .modal-header .btn.btn-icon:hover {
+            background: #e8f3ff;
+            color: #1682ff;
+        }
+        .modal .gh-modal-title-wrap {
+            display: flex;
+            align-items: center;
+            gap: 14px;
+            min-width: 0;
+        }
+        .modal .gh-modal-title-icon {
+            width: 46px;
+            height: 46px;
+            border-radius: 14px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+            background: #e8f3ff;
+            color: #1682ff;
+        }
+        .modal .gh-modal-title-icon i {
+            color: currentColor !important;
+        }
+        .modal .modal-body {
+            padding: 28px;
+        }
+        .modal .modal-body.mx-5,
+        .modal .modal-body.my-7 {
+            margin: 0 !important;
+        }
+        .modal .modal-body.scroll-y {
+            padding-right: 28px !important;
+        }
+        .modal .modal-footer {
+            padding: 0 28px 28px;
+            border-top: 0;
+            gap: 10px;
+        }
+        .modal .modal-footer.flex-center {
+            justify-content: center;
+        }
+        .modal .form-label {
+            color: #334155;
+            font-weight: 700;
+            margin-bottom: 8px;
+        }
+        .modal .form-control,
+        .modal .form-select,
+        .modal .input-group-text {
+            border-color: #dfe6f2;
+            border-radius: 10px;
+        }
+        .modal .input-group > .form-control,
+        .modal .input-group > .form-select {
+            border-top-left-radius: 0;
+            border-bottom-left-radius: 0;
+        }
+        .modal .input-group > .input-group-text {
+            background: #f8fafc;
+            color: #64748b;
+        }
+        .modal .alert.alert-danger {
+            border: 1px solid #ffd5de;
+            border-radius: 12px;
+            background: #fff4f6;
+            color: #b42342;
+        }
+        .modal .table {
+            border-radius: 12px !important;
+            overflow: hidden;
+        }
+        .gh-header-icon-btn {
+            width: 40px;
+            height: 40px;
+            border-radius: 12px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            background: #f3f7fd;
+            color: #516075;
+            transition: transform .15s ease, box-shadow .15s ease, background .15s ease, color .15s ease;
+        }
+        .gh-header-icon-btn:hover {
+            transform: translateY(-1px);
+            background: #e8f3ff;
+            color: #1682ff;
+            box-shadow: 0 8px 18px rgba(15, 23, 42, .08);
+        }
+        .gh-notification-menu,
+        .gh-user-menu {
+            border: 1px solid #e4e8f0;
+            border-radius: 16px;
+            overflow: hidden;
+            box-shadow: 0 24px 60px rgba(15, 23, 42, .15);
+        }
+        .gh-notification-head,
+        .gh-user-head {
+            background: linear-gradient(135deg, #f8fbff 0%, #fff 72%);
+            border-bottom: 1px solid #edf1f7;
+        }
+        .gh-notification-item {
+            border: 1px solid #edf1f7;
+            border-radius: 14px;
+            padding: 12px;
+            transition: background .15s ease, border-color .15s ease;
+        }
+        .gh-notification-item:hover {
+            background: #f8fbff;
+            border-color: #d8e9ff;
+        }
+        .gh-user-trigger {
+            display: inline-flex;
+            align-items: center;
+            gap: 10px;
+            border-radius: 14px;
+            padding: 6px 8px 6px 6px;
+            background: #f8fafc;
+            border: 1px solid #edf1f7;
+            transition: transform .15s ease, box-shadow .15s ease, border-color .15s ease;
+        }
+        .gh-user-trigger:hover {
+            transform: translateY(-1px);
+            border-color: #d8e9ff;
+            box-shadow: 0 8px 18px rgba(15, 23, 42, .08);
+        }
+        .gh-user-avatar {
+            width: 40px;
+            height: 40px;
+            border-radius: 12px;
+            object-fit: cover;
+            display: block;
+            background: #eef4ff;
+        }
+        .gh-user-avatar-lg {
+            width: 58px;
+            height: 58px;
+            border-radius: 16px;
+            object-fit: cover;
+            display: block;
+            background: #eef4ff;
+        }
     </style>
 
     @stack('styles')
@@ -381,6 +551,25 @@
         document.querySelectorAll('#kt_app_toolbar .ki-plus-square').forEach(function(icon) {
             icon.classList.remove('ki-plus-square');
             icon.classList.add('ki-plus-circle');
+        });
+
+        document.querySelectorAll('.modal .modal-header > h2').forEach(function(title) {
+            if (title.closest('.gh-modal-title-wrap')) return;
+
+            var wrapper = document.createElement('div');
+            wrapper.className = 'gh-modal-title-wrap';
+
+            var icon = document.createElement('span');
+            icon.className = 'gh-modal-title-icon';
+            icon.innerHTML = '<i class="ki-duotone ki-setting-2 fs-2"><span class="path1"></span><span class="path2"></span></i>';
+
+            var textWrap = document.createElement('div');
+            textWrap.className = 'min-w-0';
+
+            title.parentNode.insertBefore(wrapper, title);
+            wrapper.appendChild(icon);
+            wrapper.appendChild(textWrap);
+            textWrap.appendChild(title);
         });
     </script>
 

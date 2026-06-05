@@ -43,10 +43,11 @@
         </div>
     </div>
     <div class="card-body pt-0">
-        <table id="kt_table" class="table table-striped table-row-bordered gy-5 gs-7 border rounded">
+        <table id="kt_table" class="table table-row-bordered gy-5 gs-7 border rounded">
             <thead>
                 <tr class="fw-semibold fs-6 text-gray-800">
                     <th class="w-50px">No</th>
+                    <th class="w-80px">Foto</th>
                     <th>Nama</th>
                     <th>Kategori</th>
                     <th>Harga Satuan</th>
@@ -57,6 +58,17 @@
                 @foreach($data as $i => $item)
                 <tr>
                     <td>{{ $i + 1 }}</td>
+                    <td>
+                        <div class="symbol symbol-45px overflow-hidden bg-light">
+                            @if($item->photo_url)
+                                <img src="{{ $item->photo_url }}" alt="{{ $item->name }}" class="object-fit-cover w-100 h-100">
+                            @else
+                                <div class="symbol-label bg-light-primary text-primary">
+                                    <i class="ki-duotone ki-picture fs-2 text-primary"><span class="path1"></span><span class="path2"></span></i>
+                                </div>
+                            @endif
+                        </div>
+                    </td>
                     <td>{{ $item->name }}</td>
                     <td>{{ $item->category->name ?? '-' }}</td>
                     <td>Rp {{ number_format($item->cost_price ?? 0, 0, ',', '.') }}</td>
@@ -111,6 +123,21 @@
                         <input type="text" name="name" id="f_name" class="form-control form-control" required />
                     </div>
                     <div class="fv-row mb-5">
+                        <label class="form-label fw-semibold">Foto Material</label>
+                        <input type="file" name="photo" id="f_photo" class="form-control" accept="image/jpeg,image/png,image/webp">
+                        <div class="form-text mb-3">Format JPG, PNG, atau WEBP. Maksimal 4MB.</div>
+                        <div class="material-photo-preview" id="photoPreviewWrapper">
+                            <div class="material-photo-placeholder" id="photoPlaceholder">
+                                <i class="ki-duotone ki-picture fs-1 text-primary"><span class="path1"></span><span class="path2"></span></i>
+                                <div>
+                                    <div class="fw-bold text-gray-800">Preview foto material</div>
+                                    <div class="text-muted fs-8">Gambar akan tampil di katalog dan detail persediaan.</div>
+                                </div>
+                            </div>
+                            <img src="" alt="Preview foto material" id="photoPreview" class="d-none">
+                        </div>
+                    </div>
+                    <div class="fv-row mb-5">
                         <label class="form-label fw-semibold">Harga Satuan</label>
                         <div class="input-group mb-5">
                             <span class="input-group-text" id="cost-price-addon">Rp</span>
@@ -129,6 +156,14 @@
 </div>
 @endsection
 
+@push('styles')
+<style>
+.material-photo-preview{width:100%;min-height:150px;border:1px dashed #cbd5e1;border-radius:14px;background:#f8fafc;display:flex;align-items:center;justify-content:center;overflow:hidden}
+.material-photo-preview img{width:100%;height:180px;object-fit:cover;display:block}
+.material-photo-placeholder{display:flex;align-items:center;gap:14px;padding:20px;color:#475569;text-align:left}
+</style>
+@endpush
+
 @push('scripts')
 <script>
 var formMode = 'create';
@@ -143,13 +178,13 @@ $(document).ready(function() {
             {
                 extend: 'excelHtml5',
                 title: 'Katalog Material - Garasi Hobby',
-                exportOptions: { columns: [0, 1, 2, 3] }
+                exportOptions: { columns: [0, 2, 3, 4] }
             }
         ],
         order: [],
         pageLength: 10,
         columnDefs: [
-            { orderable: false, targets: [0, 4] }
+            { orderable: false, targets: [0, 1, 5] }
         ],
         language: {
             zeroRecords: "Data tidak ditemukan",
@@ -205,12 +240,28 @@ function setCurrencyValue(displayId, hiddenId, value) {
     document.getElementById(displayId).value = formatRupiah(digits);
 }
 
+function setPhotoPreview(url) {
+    var preview = document.getElementById('photoPreview');
+    var placeholder = document.getElementById('photoPlaceholder');
+
+    if (url) {
+        preview.src = url;
+        preview.classList.remove('d-none');
+        placeholder.classList.add('d-none');
+    } else {
+        preview.src = '';
+        preview.classList.add('d-none');
+        placeholder.classList.remove('d-none');
+    }
+}
+
 function openCreateModal() {
     formMode = 'create';
     editId = null;
     document.getElementById('modalTitle').textContent = 'Tambah Material';
     document.getElementById('dataForm').reset();
     setCurrencyValue('f_cost_price_display', 'f_cost_price', '');
+    setPhotoPreview('');
     hideErrors();
     new bootstrap.Modal(document.getElementById('formModal')).show();
 }
@@ -229,6 +280,8 @@ function openEditModal(id) {
         document.getElementById('f_category').value = data.material_category_id || '';
         document.getElementById('f_name').value = data.name || '';
         setCurrencyValue('f_cost_price_display', 'f_cost_price', data.cost_price || '');
+        document.getElementById('f_photo').value = '';
+        setPhotoPreview(data.photo_url || '');
         new bootstrap.Modal(document.getElementById('formModal')).show();
     });
 }
@@ -287,6 +340,11 @@ document.getElementById('dataForm').addEventListener('submit', function(e) {
 
 document.getElementById('f_cost_price_display').addEventListener('input', function() {
     setCurrencyValue('f_cost_price_display', 'f_cost_price', this.value);
+});
+
+document.getElementById('f_photo').addEventListener('change', function() {
+    var file = this.files && this.files[0] ? this.files[0] : null;
+    setPhotoPreview(file ? URL.createObjectURL(file) : '');
 });
 </script>
 @endpush

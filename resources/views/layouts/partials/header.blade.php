@@ -33,56 +33,51 @@
                 @include('layouts.partials.notification-bell')
 
                 {{-- User menu --}}
-                <div class="app-navbar-item ms-1 ms-md-3" id="kt_header_user_menu_toggle">
-                    <div class="cursor-pointer symbol symbol-35px symbol-md-40px"
+                <div class="app-navbar-item ms-2 ms-md-3" id="kt_header_user_menu_toggle">
+                    <div class="cursor-pointer gh-user-trigger"
                          data-kt-menu-trigger="{default: 'click', lg: 'hover'}"
                          data-kt-menu-attach="parent"
                          data-kt-menu-placement="bottom-end">
-                        <div class="symbol-label fs-3 bg-light-primary text-primary fw-bold">
-                            {{ strtoupper(substr(auth()->user()->name ?? 'U', 0, 1)) }}
+                        <img src="{{ asset('assets/media/profil-user.png') }}" alt="{{ auth()->user()->name ?? 'User' }}" class="gh-user-avatar">
+                        <div class="d-none d-md-flex flex-column lh-sm">
+                            <span class="fw-bold text-gray-900 fs-7">{{ auth()->user()->name ?? 'User' }}</span>
+                            <span class="text-muted fs-8">{{ auth()->user()->jabatan ?? 'Pengguna' }}</span>
                         </div>
+                        <i class="ki-duotone ki-down fs-5 text-muted d-none d-md-inline-flex"></i>
                     </div>
 
                     {{-- User dropdown --}}
-                    <div class="menu menu-sub menu-sub-dropdown menu-column menu-rounded menu-gray-800 menu-state-bg menu-state-color fw-semibold py-4 fs-6 w-275px"
+                    <div class="menu menu-sub menu-sub-dropdown menu-column menu-rounded menu-gray-800 menu-state-bg menu-state-color fw-semibold fs-6 w-325px gh-user-menu"
                          data-kt-menu="true">
-                        <div class="menu-item px-3">
-                            <div class="menu-content d-flex align-items-center px-3">
-                                <div class="symbol symbol-50px me-5">
-                                    <div class="symbol-label fs-3 bg-light-primary text-primary fw-bold">
-                                        {{ strtoupper(substr(auth()->user()->name ?? 'U', 0, 1)) }}
-                                    </div>
-                                </div>
-                                <div class="d-flex flex-column">
-                                    <div class="fw-bold d-flex align-items-center fs-5">
-                                        {{ auth()->user()->name }}
-                                    </div>
-                                    <span class="fw-semibold text-muted text-hover-primary fs-7">
-                                        {{ auth()->user()->jabatan ?? '-' }}
-                                    </span>
+                        <div class="gh-user-head px-6 py-5">
+                            <div class="d-flex align-items-center">
+                                <img src="{{ asset('assets/media/profil-user.png') }}" alt="{{ auth()->user()->name ?? 'User' }}" class="gh-user-avatar-lg me-4">
+                                <div class="min-w-0">
+                                    <div class="fw-bolder text-gray-900 fs-5 text-truncate">{{ auth()->user()->name ?? 'User' }}</div>
+                                    <div class="text-muted fs-7 text-truncate">{{ auth()->user()->jabatan ?? '-' }}</div>
+                                    <div class="text-gray-500 fs-8 text-truncate">{{ auth()->user()->email ?? '' }}</div>
                                 </div>
                             </div>
                         </div>
-                        <div class="separator my-2"></div>
 
-                        <div class="menu-item px-5">
-                            <div class="menu-content text-muted pb-2 px-5 fs-7 text-uppercase">
-                                Role
-                            </div>
-                            @foreach(auth()->user()->getRoleNames() as $role)
-                                <div class="menu-content px-5 py-1">
+                        <div class="px-6 py-4">
+                            <div class="text-muted fs-8 text-uppercase fw-bold mb-2">Role</div>
+                            <div class="d-flex flex-wrap gap-2">
+                                @forelse(auth()->user()->getRoleNames() as $role)
                                     <span class="badge badge-light-primary">{{ $role }}</span>
-                                </div>
-                            @endforeach
+                                @empty
+                                    <span class="badge badge-light">Tidak ada role</span>
+                                @endforelse
+                            </div>
                         </div>
 
-                        <div class="separator my-2"></div>
+                        <div class="separator my-0"></div>
 
-                        <div class="menu-item px-5">
+                        <div class="px-4 py-3">
                             <form action="{{ route('logout') }}" method="POST" class="m-0">
                                 @csrf
-                                <button type="submit" class="menu-link px-5 w-100 text-start bg-transparent border-0">
-                                    <i class="ki-outline ki-exit-right fs-2 me-2"></i>
+                                <button type="submit" class="menu-link px-4 py-3 w-100 text-start bg-transparent border-0 rounded text-danger">
+                                    <i class="ki-outline ki-exit-right fs-2 me-3 text-danger"></i>
                                     Keluar
                                 </button>
                             </form>

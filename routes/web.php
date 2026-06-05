@@ -163,6 +163,9 @@ Route::middleware(['auth'])->group(function () {
     // Operasional - Persediaan Material
     Route::middleware('can:materials.view')->group(function () {
         Route::get('/operasional/persediaan-material', [MaterialInventoryController::class, 'index'])->name('material-inventory.index');
+        Route::get('/operasional/persediaan-material/{material}/data', [MaterialInventoryController::class, 'data'])->name('material-inventory.data');
+        Route::put('/operasional/persediaan-material/{material}', [MaterialInventoryController::class, 'update'])->middleware('can:materials.edit')->name('material-inventory.update');
+        Route::post('/operasional/persediaan-material/{material}/adjust', [MaterialInventoryController::class, 'adjust'])->middleware('can:materials.edit')->name('material-inventory.adjust');
         Route::get('/operasional/persediaan-material/{material}', [MaterialInventoryController::class, 'show'])->name('material-inventory.show');
     });
 
