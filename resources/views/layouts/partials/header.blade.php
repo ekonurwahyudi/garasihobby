@@ -54,20 +54,14 @@
                                 <img src="{{ asset('assets/media/profil-user.png') }}" alt="{{ auth()->user()->name ?? 'User' }}" class="gh-user-avatar-lg me-4">
                                 <div class="min-w-0">
                                     <div class="fw-bolder text-gray-900 fs-5 text-truncate">{{ auth()->user()->name ?? 'User' }}</div>
-                                    <div class="text-muted fs-7 text-truncate">{{ auth()->user()->jabatan ?? '-' }}</div>
+                                    <div class="d-flex align-items-center gap-2 flex-wrap mt-1">
+                                        <span class="text-muted fs-7 text-truncate">{{ auth()->user()->jabatan ?? '-' }}</span>
+                                        @foreach(auth()->user()->getRoleNames()->take(2) as $role)
+                                            <span class="badge badge-light-primary">{{ $role }}</span>
+                                        @endforeach
+                                    </div>
                                     <div class="text-gray-500 fs-8 text-truncate">{{ auth()->user()->email ?? '' }}</div>
                                 </div>
-                            </div>
-                        </div>
-
-                        <div class="px-6 py-4">
-                            <div class="text-muted fs-8 text-uppercase fw-bold mb-2">Role</div>
-                            <div class="d-flex flex-wrap gap-2">
-                                @forelse(auth()->user()->getRoleNames() as $role)
-                                    <span class="badge badge-light-primary">{{ $role }}</span>
-                                @empty
-                                    <span class="badge badge-light">Tidak ada role</span>
-                                @endforelse
                             </div>
                         </div>
 

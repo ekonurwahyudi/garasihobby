@@ -99,6 +99,11 @@ class RolePermissionSeeder extends Seeder
             'debt-receivables.edit',
             'debt-receivables.delete',
             'debt-receivables.approve',
+            'revenue-sharings.create',
+            'revenue-sharings.view',
+            'revenue-sharings.edit',
+            'revenue-sharings.delete',
+            'revenue-sharings.approve',
 
             // Notifikasi
             'notifications.view',

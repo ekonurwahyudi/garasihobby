@@ -16,6 +16,7 @@ class DatabaseSeeder extends Seeder
             MaterialCategorySeeder::class,
             AssetCategorySeeder::class,
             DebtReceivableCategorySeeder::class,
+            FinanceCategoryItemSeeder::class,
         ]);
     }
 }

@@ -103,6 +103,7 @@ class RoleController extends Controller
                 ['page' => 'finance-transactions', 'label' => 'Input Keuangan', 'modules' => ['finance-transactions'], 'actions' => []],
                 ['page' => 'asset-purchases', 'label' => 'Pembelian Aset', 'modules' => ['asset-purchases'], 'actions' => []],
                 ['page' => 'debt-receivables', 'label' => 'Hutang Piutang', 'modules' => ['debt-receivables'], 'actions' => []],
+                ['page' => 'revenue-sharings', 'label' => 'Revenue Sharing', 'modules' => ['revenue-sharings'], 'actions' => []],
             ],
             'Pengaturan' => [
                 ['page' => 'notifications', 'label' => 'Notifikasi', 'modules' => ['notifications'], 'actions' => []],

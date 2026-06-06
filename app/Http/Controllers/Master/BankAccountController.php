@@ -76,6 +76,8 @@ class BankAccountController extends Controller
                 };
                 $movements->push([
                     'date' => $transaction->transaction_date,
+                    'sort_at' => $transaction->created_at ?? $transaction->transaction_date,
+                    'sort_id' => $transaction->id,
                     'reference' => $transaction->transaction_number,
                     'source' => $source,
                     'description' => $activity,
@@ -93,6 +95,8 @@ class BankAccountController extends Controller
                 $other = $isIncome ? $transfer->fromBankAccount : $transfer->toBankAccount;
                 $movements->push([
                     'date' => $transfer->transfer_date,
+                    'sort_at' => $transfer->created_at ?? $transfer->transfer_date,
+                    'sort_id' => $transfer->id,
                     'reference' => 'TRF-' . str_pad($transfer->id, 6, '0', STR_PAD_LEFT),
                     'source' => 'Transfer Saldo',
                     'description' => ($isIncome ? 'Transfer dari ' : 'Transfer ke ') . ($other?->bank_name ?? '-'),
@@ -108,11 +112,16 @@ class BankAccountController extends Controller
             ->get();
 
         $runningBalance = (float) $bank_account->opening_balance;
-        $movements = $movements->sortBy('date')->values()->map(function ($movement) use (&$runningBalance) {
+        $movements = $movements
+            ->sortBy(fn ($movement) => sprintf('%s-%010d', $movement['sort_at'], $movement['sort_id']))
+            ->values()
+            ->map(function ($movement) use (&$runningBalance) {
             $runningBalance += $movement['type'] === 'income' ? $movement['amount'] : -$movement['amount'];
             $movement['balance'] = $runningBalance;
             return $movement;
-        })->sortByDesc('date')->values();
+        })
+            ->sortByDesc(fn ($movement) => sprintf('%s-%010d', $movement['sort_at'], $movement['sort_id']))
+            ->values();
 
         return view('master.bank-accounts.show', compact('bank_account', 'movements', 'adjustments'));
     }

@@ -15,6 +15,9 @@
         <i class="ki-duotone ki-file-down fs-3"><span class="path1"></span><span class="path2"></span></i> Export Excel
     </a>
     @can('finance-transactions.create')
+    <button type="button" class="btn btn-sm btn-light-primary d-inline-flex align-items-center gap-2" data-bs-toggle="modal" data-bs-target="#importFinanceModal">
+        <i class="ki-duotone ki-file-up fs-2"><span class="path1"></span><span class="path2"></span></i> Import Excel
+    </button>
     <a href="{{ route('finance-transactions.create') }}" class="btn btn-sm btn-primary d-inline-flex align-items-center gap-2">
         <i class="ki-duotone ki-plus-circle fs-2"><span class="path1"></span><span class="path2"></span></i> Tambah Transaksi
     </a>
@@ -233,6 +236,65 @@
         color: #1b84ff;
         border-color: #bfdbfe;
     }
+    .finance-import-note {
+        border: 1px dashed #cbdaf5;
+        border-radius: 12px;
+        background: #f8fbff;
+        padding: 14px;
+    }
+    .finance-import-sample {
+        border: 1px solid #e4e8f0;
+        border-radius: 12px;
+        overflow: hidden;
+    }
+    .finance-import-sample table {
+        margin-bottom: 0;
+        font-size: 12px;
+    }
+    .finance-import-reference {
+        border: 1px solid #e4e8f0;
+        border-radius: 12px;
+        background: #fff;
+        overflow: hidden;
+        height: 100%;
+    }
+    .finance-import-reference-head {
+        padding: 12px 14px;
+        border-bottom: 1px solid #edf1f7;
+        background: #f8fbff;
+    }
+    .finance-import-reference-body {
+        max-height: 260px;
+        overflow: auto;
+    }
+    .finance-import-reference table {
+        margin-bottom: 0;
+        font-size: 12px;
+    }
+    .finance-import-reference th {
+        position: sticky;
+        top: 0;
+        z-index: 1;
+        background: #f3f6fa;
+        color: #5e6278;
+        font-weight: 600;
+        white-space: nowrap;
+    }
+    .finance-import-reference td {
+        vertical-align: middle;
+    }
+    .finance-import-code {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        min-width: 54px;
+        border-radius: 8px;
+        padding: 4px 8px;
+        background: #eef6ff;
+        color: #1b84ff;
+        font-weight: 600;
+        letter-spacing: .02em;
+    }
 </style>
 @endpush
 
@@ -248,6 +310,9 @@
         $isOrderPayment = ($transaction->item?->code === 'AUTO-ORDER') || \Illuminate\Support\Str::startsWith($activity, 'Pembayaran Order');
         return $isOrderPayment ? 'Order Bengkel' : ($transaction->item?->category?->name ?? '-');
     })->unique()->sort()->values();
+    $sampleIncomeItem = $importItems->first(fn ($item) => $item->category?->type === 'income') ?: $importItems->first();
+    $sampleExpenseItem = $importItems->first(fn ($item) => $item->category?->type === 'expense') ?: $importItems->first();
+    $sampleBankAccount = $importBankAccounts->first();
 @endphp
 <div class="row row-cols-1 row-cols-sm-2 row-cols-xl-3 g-5 mb-7">
     <div class="col">
@@ -438,6 +503,153 @@
         </table>
     </div>
 </div>
+
+@can('finance-transactions.create')
+<div class="modal fade" id="importFinanceModal" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered modal-xl">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2 class="fw-bold">Import Transaksi Keuangan</h2>
+                <button type="button" class="btn btn-icon btn-sm" data-bs-dismiss="modal">
+                    <i class="ki-duotone ki-cross fs-1"><span class="path1"></span><span class="path2"></span></i>
+                </button>
+            </div>
+            <form method="POST" action="{{ route('finance-transactions.import') }}" enctype="multipart/form-data">
+                @csrf
+                <div class="modal-body">
+                    <div class="finance-import-note mb-5">
+                        <div class="fw-semibold text-gray-900 mb-1">Nomor transaksi dan status tidak perlu diisi.</div>
+                        <div class="text-muted fs-7">Sistem akan membuat nomor transaksi otomatis, dan semua data import masuk dengan status Awaiting.</div>
+                    </div>
+
+                    <div class="row g-5">
+                        <div class="col-lg-5">
+                            <label class="required form-label fw-semibold">Upload File</label>
+                            <input type="file" name="import_file" class="form-control" accept=".csv,.txt" required>
+                            <div class="form-text">Gunakan file CSV. Jika dari Excel, pilih Save As lalu format CSV.</div>
+
+                            <button type="button" class="btn btn-sm btn-light-primary mt-4" id="downloadImportSample">
+                                <i class="ki-duotone ki-file-down fs-3"><span class="path1"></span><span class="path2"></span></i>
+                                Download Contoh CSV
+                            </button>
+                        </div>
+                        <div class="col-lg-7">
+                            <div class="fw-semibold text-gray-900 mb-2">Format Kolom</div>
+                            <div class="finance-import-sample table-responsive">
+                                <table class="table align-middle">
+                                    <thead>
+                                        <tr>
+                                            <th>transaction_type</th>
+                                            <th>transaction_date</th>
+                                            <th>activity</th>
+                                            <th>amount</th>
+                                            <th>finance_item_code</th>
+                                            <th>bank_account_code</th>
+                                            <th>notes</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <tr>
+                                            <td>income</td>
+                                            <td>{{ now()->format('Y-m-d') }}</td>
+                                            <td>Pembayaran jasa</td>
+                                            <td>250000</td>
+                                            <td>{{ $sampleIncomeItem?->code ?? 'KODE_ITEM' }}</td>
+                                            <td>{{ $sampleBankAccount?->code ?? 'KODE_BANK' }}</td>
+                                            <td>Contoh pemasukan</td>
+                                        </tr>
+                                        <tr>
+                                            <td>expense</td>
+                                            <td>{{ now()->format('Y-m-d') }}</td>
+                                            <td>Biaya operasional</td>
+                                            <td>100000</td>
+                                            <td>{{ $sampleExpenseItem?->code ?? 'KODE_ITEM' }}</td>
+                                            <td>{{ $sampleBankAccount?->code ?? 'KODE_BANK' }}</td>
+                                            <td>Contoh pengeluaran</td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                            <div class="text-muted fs-8 mt-3">
+                                `finance_item_code` memakai kode item keuangan aktif. `bank_account_code` memakai kode account bank/cash aktif.
+                            </div>
+                        </div>
+                        <div class="col-lg-6">
+                            <div class="finance-import-reference">
+                                <div class="finance-import-reference-head">
+                                    <div class="fw-semibold text-gray-900">Kode Item Aktif</div>
+                                    <div class="text-muted fs-8">Gunakan kode berikut pada kolom finance_item_code.</div>
+                                </div>
+                                <div class="finance-import-reference-body table-responsive">
+                                    <table class="table table-row-dashed align-middle">
+                                        <thead>
+                                            <tr>
+                                                <th>Kode</th>
+                                                <th>Nama Item</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            @forelse($importItems as $item)
+                                                <tr>
+                                                    <td><span class="finance-import-code">{{ $item->code }}</span></td>
+                                                    <td class="text-gray-800">{{ $item->name }}</td>
+                                                </tr>
+                                            @empty
+                                                <tr>
+                                                    <td colspan="2" class="text-center text-muted py-5">Belum ada item aktif.</td>
+                                                </tr>
+                                            @endforelse
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-lg-6">
+                            <div class="finance-import-reference">
+                                <div class="finance-import-reference-head">
+                                    <div class="fw-semibold text-gray-900">Kode Rekening Aktif</div>
+                                    <div class="text-muted fs-8">Gunakan kode berikut pada kolom bank_account_code.</div>
+                                </div>
+                                <div class="finance-import-reference-body table-responsive">
+                                    <table class="table table-row-dashed align-middle">
+                                        <thead>
+                                            <tr>
+                                                <th>Kode</th>
+                                                <th>Bank / Cash</th>
+                                                <th>Pemilik</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            @forelse($importBankAccounts as $account)
+                                                <tr>
+                                                    <td><span class="finance-import-code">{{ $account->code }}</span></td>
+                                                    <td class="text-gray-800">{{ $account->bank_name }}</td>
+                                                    <td class="text-muted">{{ $account->account_name ?? '-' }}</td>
+                                                </tr>
+                                            @empty
+                                                <tr>
+                                                    <td colspan="3" class="text-center text-muted py-5">Belum ada rekening aktif.</td>
+                                                </tr>
+                                            @endforelse
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-light" data-bs-dismiss="modal">Batal</button>
+                    <button type="submit" class="btn btn-primary">
+                        <i class="ki-duotone ki-file-up fs-3"><span class="path1"></span><span class="path2"></span></i>
+                        Import
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+@endcan
 @endsection
 
 @push('scripts')
@@ -474,6 +686,29 @@ $('#lengthSelect').on('change', function() { table.page.len($(this).val()).draw(
 $('#exportExcel').on('click', function(e) {
     e.preventDefault();
     table.button(0).trigger();
+});
+
+$('#downloadImportSample').on('click', function() {
+    var csv = [
+        ['transaction_type','transaction_date','activity','amount','finance_item_code','bank_account_code','notes'],
+        ['income','{{ now()->format('Y-m-d') }}','Pembayaran jasa','250000','{{ $sampleIncomeItem?->code ?? 'KODE_ITEM' }}','{{ $sampleBankAccount?->code ?? 'KODE_BANK' }}','Contoh pemasukan'],
+        ['expense','{{ now()->format('Y-m-d') }}','Biaya operasional','100000','{{ $sampleExpenseItem?->code ?? 'KODE_ITEM' }}','{{ $sampleBankAccount?->code ?? 'KODE_BANK' }}','Contoh pengeluaran']
+    ].map(function(row) {
+        return row.map(function(value) {
+            value = String(value || '');
+            return '"' + value.replace(/"/g, '""') + '"';
+        }).join(',');
+    }).join('\r\n');
+
+    var blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+    var url = URL.createObjectURL(blob);
+    var link = document.createElement('a');
+    link.href = url;
+    link.download = 'contoh-import-transaksi-keuangan.csv';
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    URL.revokeObjectURL(url);
 });
 
 var dateRangeStart = null;

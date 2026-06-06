@@ -82,7 +82,145 @@
                     <!--end:Menu item-->
                     @endcan
 
-                    {{-- ====== SECTION: MASTER DATA ====== --}}
+                    {{-- ====== SECTION: OPERASIONAL ====== --}}
+                    @canany(['customers.view', 'orders.create', 'orders.view', 'purchases.view', 'purchases.create', 'purchases.approve', 'materials.view'])
+                    <!--begin:Menu item-->
+                    <div class="menu-item pt-5">
+                        <!--begin:Menu content-->
+                        <div class="menu-content">
+                            <span class="menu-heading fw-bold text-uppercase fs-7">Operasional</span>
+                        </div>
+                        <!--end:Menu content-->
+                    </div>
+                    <!--end:Menu item-->
+                    @endcanany
+
+                    @can('customers.view')
+                    <!--begin:Menu item-->
+                    <div class="menu-item">
+                        <!--begin:Menu link-->
+                        <a class="menu-link {{ request()->routeIs('customers.*') ? 'active' : '' }}" href="{{ route('customers.index') }}">
+                            <span class="menu-icon">
+                                <i class="ki-duotone ki-user-square fs-2">
+                                    <span class="path1"></span>
+                                    <span class="path2"></span>
+                                    <span class="path3"></span>
+                                    <span class="path4"></span>
+                                </i>
+                            </span>
+                            <span class="menu-title">Pelanggan</span>
+                        </a>
+                        <!--end:Menu link-->
+                    </div>
+                    <!--end:Menu item-->
+                    @endcan
+
+                    @canany(['orders.create', 'orders.view'])
+                    <!--begin:Menu item-->
+                    <div class="menu-item">
+                        <a class="menu-link {{ request()->routeIs('orders.*') ? 'active' : '' }}" href="{{ route('orders.index') }}">
+                            <span class="menu-icon">
+                                <i class="ki-duotone ki-briefcase fs-2">
+                                    <span class="path1"></span>
+                                    <span class="path2"></span>
+                                </i>
+                            </span>
+                            <span class="menu-title">Order Management</span>
+                        </a>
+                    </div>
+                    <!--end:Menu item-->
+                    @endcanany
+
+                    @can('purchases.view')
+                    <!--begin:Menu item-->
+                    <div class="menu-item">
+                        <!--begin:Menu link-->
+                        <a class="menu-link {{ request()->routeIs('material-purchases.*') ? 'active' : '' }}" href="{{ route('material-purchases.index') }}">
+                            <span class="menu-icon">
+                                <i class="ki-duotone ki-purchase fs-2">
+                                    <span class="path1"></span>
+                                    <span class="path2"></span>
+                                </i>
+                            </span>
+                            <span class="menu-title">Pembelian Material</span>
+                        </a>
+                        <!--end:Menu link-->
+                    </div>
+                    <!--end:Menu item-->
+                    @endcan
+
+                    @can('materials.view')
+                    <!--begin:Menu item-->
+                    <div class="menu-item">
+                        <!--begin:Menu link-->
+                        <a class="menu-link {{ request()->routeIs('material-inventory.*') ? 'active' : '' }}" href="{{ route('material-inventory.index') }}">
+                            <span class="menu-icon">
+                                <i class="ki-duotone ki-courier-express fs-2">
+                                    <span class="path1"></span>
+                                    <span class="path2"></span>
+                                </i>
+                            </span>
+                            <span class="menu-title">Persediaan Material</span>
+                        </a>
+                        <!--end:Menu link-->
+                    </div>
+                    <!--end:Menu item-->
+                    @endcan
+
+                    @canany(['finance-transactions.view', 'bank-accounts.view', 'asset-purchases.view', 'debt-receivables.view', 'revenue-sharings.view'])
+                    <div class="menu-item pt-5">
+                        <div class="menu-content">
+                            <span class="menu-heading fw-bold text-uppercase fs-7">Keuangan</span>
+                        </div>
+                    </div>
+                    @endcanany
+
+                    @can('bank-accounts.view')
+                    <div class="menu-item">
+                        <a class="menu-link {{ request()->routeIs('bank-accounts.*') ? 'active' : '' }}" href="{{ route('bank-accounts.index') }}">
+                            <span class="menu-icon"><i class="ki-duotone ki-bank fs-2"><span class="path1"></span><span class="path2"></span></i></span>
+                            <span class="menu-title">Account Bank</span>
+                        </a>
+                    </div>
+                    @endcan
+
+                    @can('finance-transactions.view')
+                    <div class="menu-item">
+                        <a class="menu-link {{ request()->routeIs('finance-transactions.*') ? 'active' : '' }}" href="{{ route('finance-transactions.index') }}">
+                            <span class="menu-icon"><i class="ki-duotone ki-wallet fs-2"><span class="path1"></span><span class="path2"></span><span class="path3"></span><span class="path4"></span></i></span>
+                            <span class="menu-title">Input Keuangan</span>
+                        </a>
+                    </div>
+                    @endcan
+
+                    @can('asset-purchases.view')
+                    <div class="menu-item">
+                        <a class="menu-link {{ request()->routeIs('asset-purchases.*') ? 'active' : '' }}" href="{{ route('asset-purchases.index') }}">
+                            <span class="menu-icon"><i class="ki-duotone ki-briefcase fs-2"><span class="path1"></span><span class="path2"></span></i></span>
+                            <span class="menu-title">Pembelian Aset</span>
+                        </a>
+                    </div>
+                    @endcan
+
+                    @can('debt-receivables.view')
+                    <div class="menu-item">
+                        <a class="menu-link {{ request()->routeIs('debt-receivables.*') ? 'active' : '' }}" href="{{ route('debt-receivables.index') }}">
+                            <span class="menu-icon"><i class="ki-duotone ki-arrows-circle fs-2"><span class="path1"></span><span class="path2"></span></i></span>
+                            <span class="menu-title">Hutang Piutang</span>
+                        </a>
+                    </div>
+                    @endcan
+
+                    @can('revenue-sharings.view')
+                    <div class="menu-item">
+                        <a class="menu-link {{ request()->routeIs('revenue-sharings.*') ? 'active' : '' }}" href="{{ route('revenue-sharings.index') }}">
+                            <span class="menu-icon"><i class="ki-duotone ki-percentage fs-2"><span class="path1"></span><span class="path2"></span></i></span>
+                            <span class="menu-title">Revenue Sharing</span>
+                        </a>
+                    </div>
+                    @endcan
+
+                     {{-- ====== SECTION: MASTER DATA ====== --}}
                     @canany(['users.view', 'checklist.view', 'materials.view', 'promo.view', 'finance-master.view'])
                     <!--begin:Menu item-->
                     <div class="menu-item pt-5">
@@ -109,7 +247,7 @@
                                     <span class="path5"></span>
                                 </i>
                             </span>
-                            <span class="menu-title">User</span>
+                            <span class="menu-title">Karyawan</span>
                         </a>
                         <!--end:Menu link-->
                     </div>
@@ -246,135 +384,6 @@
                                 </a>
                             </div>
                         </div>
-                    </div>
-                    @endcan
-
-                    {{-- ====== SECTION: OPERASIONAL ====== --}}
-                    @canany(['customers.view', 'orders.create', 'orders.view', 'purchases.view', 'purchases.create', 'purchases.approve', 'materials.view'])
-                    <!--begin:Menu item-->
-                    <div class="menu-item pt-5">
-                        <!--begin:Menu content-->
-                        <div class="menu-content">
-                            <span class="menu-heading fw-bold text-uppercase fs-7">Operasional</span>
-                        </div>
-                        <!--end:Menu content-->
-                    </div>
-                    <!--end:Menu item-->
-                    @endcanany
-
-                    @can('customers.view')
-                    <!--begin:Menu item-->
-                    <div class="menu-item">
-                        <!--begin:Menu link-->
-                        <a class="menu-link {{ request()->routeIs('customers.*') ? 'active' : '' }}" href="{{ route('customers.index') }}">
-                            <span class="menu-icon">
-                                <i class="ki-duotone ki-user-square fs-2">
-                                    <span class="path1"></span>
-                                    <span class="path2"></span>
-                                    <span class="path3"></span>
-                                    <span class="path4"></span>
-                                </i>
-                            </span>
-                            <span class="menu-title">Pelanggan</span>
-                        </a>
-                        <!--end:Menu link-->
-                    </div>
-                    <!--end:Menu item-->
-                    @endcan
-
-                    @canany(['orders.create', 'orders.view'])
-                    <!--begin:Menu item-->
-                    <div class="menu-item">
-                        <a class="menu-link {{ request()->routeIs('orders.*') ? 'active' : '' }}" href="{{ route('orders.index') }}">
-                            <span class="menu-icon">
-                                <i class="ki-duotone ki-briefcase fs-2">
-                                    <span class="path1"></span>
-                                    <span class="path2"></span>
-                                </i>
-                            </span>
-                            <span class="menu-title">Order Management</span>
-                        </a>
-                    </div>
-                    <!--end:Menu item-->
-                    @endcanany
-
-                    @can('purchases.view')
-                    <!--begin:Menu item-->
-                    <div class="menu-item">
-                        <!--begin:Menu link-->
-                        <a class="menu-link {{ request()->routeIs('material-purchases.*') ? 'active' : '' }}" href="{{ route('material-purchases.index') }}">
-                            <span class="menu-icon">
-                                <i class="ki-duotone ki-purchase fs-2">
-                                    <span class="path1"></span>
-                                    <span class="path2"></span>
-                                </i>
-                            </span>
-                            <span class="menu-title">Pembelian Material</span>
-                        </a>
-                        <!--end:Menu link-->
-                    </div>
-                    <!--end:Menu item-->
-                    @endcan
-
-                    @can('materials.view')
-                    <!--begin:Menu item-->
-                    <div class="menu-item">
-                        <!--begin:Menu link-->
-                        <a class="menu-link {{ request()->routeIs('material-inventory.*') ? 'active' : '' }}" href="{{ route('material-inventory.index') }}">
-                            <span class="menu-icon">
-                                <i class="ki-duotone ki-courier-express fs-2">
-                                    <span class="path1"></span>
-                                    <span class="path2"></span>
-                                </i>
-                            </span>
-                            <span class="menu-title">Persediaan Material</span>
-                        </a>
-                        <!--end:Menu link-->
-                    </div>
-                    <!--end:Menu item-->
-                    @endcan
-
-                    @canany(['finance-transactions.view', 'bank-accounts.view', 'asset-purchases.view', 'debt-receivables.view'])
-                    <div class="menu-item pt-5">
-                        <div class="menu-content">
-                            <span class="menu-heading fw-bold text-uppercase fs-7">Keuangan</span>
-                        </div>
-                    </div>
-                    @endcanany
-
-                    @can('bank-accounts.view')
-                    <div class="menu-item">
-                        <a class="menu-link {{ request()->routeIs('bank-accounts.*') ? 'active' : '' }}" href="{{ route('bank-accounts.index') }}">
-                            <span class="menu-icon"><i class="ki-duotone ki-bank fs-2"><span class="path1"></span><span class="path2"></span></i></span>
-                            <span class="menu-title">Account Bank</span>
-                        </a>
-                    </div>
-                    @endcan
-
-                    @can('finance-transactions.view')
-                    <div class="menu-item">
-                        <a class="menu-link {{ request()->routeIs('finance-transactions.*') ? 'active' : '' }}" href="{{ route('finance-transactions.index') }}">
-                            <span class="menu-icon"><i class="ki-duotone ki-wallet fs-2"><span class="path1"></span><span class="path2"></span><span class="path3"></span><span class="path4"></span></i></span>
-                            <span class="menu-title">Input Keuangan</span>
-                        </a>
-                    </div>
-                    @endcan
-
-                    @can('asset-purchases.view')
-                    <div class="menu-item">
-                        <a class="menu-link {{ request()->routeIs('asset-purchases.*') ? 'active' : '' }}" href="{{ route('asset-purchases.index') }}">
-                            <span class="menu-icon"><i class="ki-duotone ki-briefcase fs-2"><span class="path1"></span><span class="path2"></span></i></span>
-                            <span class="menu-title">Pembelian Aset</span>
-                        </a>
-                    </div>
-                    @endcan
-
-                    @can('debt-receivables.view')
-                    <div class="menu-item">
-                        <a class="menu-link {{ request()->routeIs('debt-receivables.*') ? 'active' : '' }}" href="{{ route('debt-receivables.index') }}">
-                            <span class="menu-icon"><i class="ki-duotone ki-arrows-circle fs-2"><span class="path1"></span><span class="path2"></span></i></span>
-                            <span class="menu-title">Hutang Piutang</span>
-                        </a>
                     </div>
                     @endcan
 

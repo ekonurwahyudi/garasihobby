@@ -259,6 +259,7 @@
                         <thead>
                             <tr>
                                 <th class="w-60px">No.</th>
+                                <th class="w-70px">Foto</th>
                                 <th>Nama Material</th>
                                 <th>Kategori</th>
                                 <th class="text-end">Qty On Hand</th>
@@ -282,6 +283,15 @@
                                 @endphp
                                 <tr>
                                     <td class="text-muted">{{ $loop->iteration }}</td>
+                                    <td>
+                                        <div class="gh-material-thumb">
+                                            @if($material->photo_url)
+                                                <img src="{{ $material->photo_url }}" alt="{{ $material->name }}">
+                                            @else
+                                                <i class="ki-duotone ki-picture fs-2"><span class="path1"></span><span class="path2"></span></i>
+                                            @endif
+                                        </div>
+                                    </td>
                                     <td class="fw-semibold text-gray-900">{{ $material->name }}</td>
                                     <td class="text-muted">{{ $material->category?->name ?? 'Tanpa kategori' }}</td>
                                     <td class="text-end fw-semibold">{{ $number($qty) }}</td>
@@ -296,7 +306,7 @@
                                 </tr>
                             @empty
                                 <tr>
-                                    <td colspan="7" class="text-center text-muted py-8">Stok persediaan aman.</td>
+                                    <td colspan="8" class="text-center text-muted py-8">Stok persediaan aman.</td>
                                 </tr>
                             @endforelse
                         </tbody>
@@ -698,6 +708,27 @@
     }
     .gh-stock-table tbody tr:last-child td {
         border-bottom: 0;
+    }
+    .gh-material-thumb {
+        width: 46px;
+        height: 46px;
+        border: 1px solid #e4e8f0;
+        border-radius: 10px;
+        background: #f8fafc;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        overflow: hidden;
+        color: #94a3b8;
+    }
+    .gh-material-thumb img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+        display: block;
+    }
+    .gh-material-thumb i {
+        color: currentColor !important;
     }
     .gh-list-row {
         min-height: 66px;

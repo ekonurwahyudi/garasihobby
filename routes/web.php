@@ -4,6 +4,7 @@ use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\Finance\AssetPurchaseController;
 use App\Http\Controllers\Finance\DebtReceivableController;
 use App\Http\Controllers\Finance\FinanceTransactionController;
+use App\Http\Controllers\Finance\RevenueSharingController;
 use App\Http\Controllers\Master\AssetCategoryController;
 use App\Http\Controllers\Master\BankAccountController;
 use App\Http\Controllers\Master\ChecklistCategoryController;
@@ -195,6 +196,7 @@ Route::middleware(['auth'])->group(function () {
         Route::get('/keuangan/transaksi', [FinanceTransactionController::class, 'index'])->name('finance-transactions.index');
         Route::get('/keuangan/transaksi/create', [FinanceTransactionController::class, 'create'])->middleware('can:finance-transactions.create')->name('finance-transactions.create');
         Route::post('/keuangan/transaksi', [FinanceTransactionController::class, 'store'])->middleware('can:finance-transactions.create')->name('finance-transactions.store');
+        Route::post('/keuangan/transaksi/import', [FinanceTransactionController::class, 'import'])->middleware('can:finance-transactions.create')->name('finance-transactions.import');
         Route::get('/keuangan/transaksi/{finance_transaction}/edit', [FinanceTransactionController::class, 'edit'])->middleware('can:finance-transactions.edit')->name('finance-transactions.edit');
         Route::put('/keuangan/transaksi/{finance_transaction}', [FinanceTransactionController::class, 'update'])->middleware('can:finance-transactions.edit')->name('finance-transactions.update');
         Route::delete('/keuangan/transaksi/{finance_transaction}', [FinanceTransactionController::class, 'destroy'])->middleware('can:finance-transactions.delete')->name('finance-transactions.destroy');
@@ -231,6 +233,21 @@ Route::middleware(['auth'])->group(function () {
         Route::delete('/keuangan/hutang-piutang/{debt_receivable}/payments/{payment}', [DebtReceivableController::class, 'destroyPayment'])->middleware('can:debt-receivables.delete')->name('debt-receivables.payments.destroy');
         Route::delete('/keuangan/hutang-piutang/{debt_receivable}', [DebtReceivableController::class, 'destroy'])->middleware('can:debt-receivables.delete')->name('debt-receivables.destroy');
         Route::get('/keuangan/hutang-piutang/{debt_receivable}', [DebtReceivableController::class, 'show'])->name('debt-receivables.show');
+    });
+
+    // Keuangan - Revenue Sharing
+    Route::middleware('can:revenue-sharings.view')->group(function () {
+        Route::get('/keuangan/revenue-sharing', [RevenueSharingController::class, 'index'])->name('revenue-sharings.index');
+        Route::post('/keuangan/revenue-sharing/cutoffs', [RevenueSharingController::class, 'storeCutoff'])->middleware('can:revenue-sharings.create')->name('revenue-sharings.cutoffs.store');
+        Route::delete('/keuangan/revenue-sharing/cutoffs/{revenue_cutoff}', [RevenueSharingController::class, 'destroyCutoff'])->middleware('can:revenue-sharings.delete')->name('revenue-sharings.cutoffs.destroy');
+        Route::get('/keuangan/revenue-sharing/create', [RevenueSharingController::class, 'create'])->middleware('can:revenue-sharings.create')->name('revenue-sharings.create');
+        Route::post('/keuangan/revenue-sharing', [RevenueSharingController::class, 'store'])->middleware('can:revenue-sharings.create')->name('revenue-sharings.store');
+        Route::get('/keuangan/revenue-sharing/{revenue_sharing}/edit', [RevenueSharingController::class, 'edit'])->middleware('can:revenue-sharings.edit')->name('revenue-sharings.edit');
+        Route::put('/keuangan/revenue-sharing/{revenue_sharing}', [RevenueSharingController::class, 'update'])->middleware('can:revenue-sharings.edit')->name('revenue-sharings.update');
+        Route::post('/keuangan/revenue-sharing/{revenue_sharing}/approve', [RevenueSharingController::class, 'approve'])->middleware('can:revenue-sharings.approve')->name('revenue-sharings.approve');
+        Route::post('/keuangan/revenue-sharing/{revenue_sharing}/reject', [RevenueSharingController::class, 'reject'])->middleware('can:revenue-sharings.approve')->name('revenue-sharings.reject');
+        Route::delete('/keuangan/revenue-sharing/{revenue_sharing}', [RevenueSharingController::class, 'destroy'])->middleware('can:revenue-sharings.delete')->name('revenue-sharings.destroy');
+        Route::get('/keuangan/revenue-sharing/{revenue_sharing}', [RevenueSharingController::class, 'show'])->name('revenue-sharings.show');
     });
 });
 

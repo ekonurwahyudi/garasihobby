@@ -10,6 +10,7 @@ use App\Models\FinanceItem;
 use App\Models\FinanceTransaction;
 use App\Models\Order;
 use App\Models\User;
+use Carbon\Carbon;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -25,11 +26,13 @@ class FinanceTransactionController extends Controller
     public function index(): View
     {
         $data = FinanceTransaction::with(['item.category', 'bankAccount'])
-            ->latest('transaction_date')
+            ->latest('created_at')
             ->latest('id')
             ->get();
+        $importItems = FinanceItem::with('category')->where('is_active', true)->orderBy('code')->get();
+        $importBankAccounts = BankAccount::where('is_active', true)->orderBy('code')->get();
 
-        return view('finance.transactions.index', compact('data'));
+        return view('finance.transactions.index', compact('data', 'importItems', 'importBankAccounts'));
     }
 
     public function create(): View
@@ -67,6 +70,112 @@ class FinanceTransactionController extends Controller
         $this->notifyFinanceApprovers($transaction);
 
         return redirect()->route('finance-transactions.index')->with('success', 'Transaksi keuangan berhasil diajukan dan menunggu approval.');
+    }
+
+    public function import(Request $request): RedirectResponse
+    {
+        $request->validate([
+            'import_file' => 'required|file|mimes:csv,txt|max:4096',
+        ], [
+            'import_file.required' => 'File import wajib dipilih.',
+            'import_file.mimes' => 'Gunakan file CSV. Jika memakai Excel, simpan file sebagai CSV terlebih dahulu.',
+        ]);
+
+        [$rows, $errors] = $this->readImportRows($request->file('import_file'));
+        if ($errors) {
+            return back()->with('error', implode(' ', array_slice($errors, 0, 5)));
+        }
+
+        if (empty($rows)) {
+            return back()->with('error', 'File import tidak memiliki data transaksi.');
+        }
+
+        $createdTransactions = collect();
+        $errors = [];
+
+        try {
+            DB::transaction(function () use ($rows, &$errors, $createdTransactions) {
+                foreach ($rows as $rowNumber => $row) {
+                    try {
+                        $transactionType = $this->normalizeImportType($row['transaction_type'] ?? '');
+                        $date = $this->parseImportDate($row['transaction_date'] ?? '');
+                        $amount = $this->parseImportAmount($row['amount'] ?? '');
+                        $activity = trim((string) ($row['activity'] ?? ''));
+                        $itemCode = trim((string) ($row['finance_item_code'] ?? ''));
+                        $bankCode = trim((string) ($row['bank_account_code'] ?? ''));
+
+                        if (!$transactionType) {
+                            throw ValidationException::withMessages(['transaction_type' => 'Jenis transaksi harus income/expense.']);
+                        }
+                        if (!$date) {
+                            throw ValidationException::withMessages(['transaction_date' => 'Tanggal transaksi tidak valid.']);
+                        }
+                        if ($activity === '') {
+                            throw ValidationException::withMessages(['activity' => 'Aktivitas wajib diisi.']);
+                        }
+                        if ($amount <= 0) {
+                            throw ValidationException::withMessages(['amount' => 'Nominal wajib lebih dari 0.']);
+                        }
+                        if ($itemCode === '') {
+                            throw ValidationException::withMessages(['finance_item_code' => 'Kode item wajib diisi.']);
+                        }
+                        if ($bankCode === '') {
+                            throw ValidationException::withMessages(['bank_account_code' => 'Kode rekening wajib diisi.']);
+                        }
+
+                        $item = FinanceItem::with('category')
+                            ->whereRaw('LOWER(code) = ?', [Str::lower($itemCode)])
+                            ->where('is_active', true)
+                            ->first();
+                        if (!$item) {
+                            throw ValidationException::withMessages(['finance_item_code' => 'Kode item "' . $itemCode . '" tidak ditemukan atau tidak aktif.']);
+                        }
+                        if ($item->category?->type !== $transactionType) {
+                            throw ValidationException::withMessages(['transaction_type' => 'Jenis transaksi tidak sesuai kategori item "' . $item->name . '".']);
+                        }
+
+                        $bank = BankAccount::whereRaw('LOWER(code) = ?', [Str::lower($bankCode)])
+                            ->where('is_active', true)
+                            ->first();
+                        if (!$bank) {
+                            throw ValidationException::withMessages(['bank_account_code' => 'Kode rekening "' . $bankCode . '" tidak ditemukan atau tidak aktif.']);
+                        }
+
+                        $createdTransactions->push(FinanceTransaction::create([
+                            'transaction_number' => $this->transactionNumber(),
+                            'transaction_type' => $transactionType,
+                            'transaction_date' => $date->format('Y-m-d'),
+                            'finance_item_id' => $item->id,
+                            'bank_account_id' => $bank->id,
+                            'activity' => $activity,
+                            'description' => $activity,
+                            'amount' => $amount,
+                            'notes' => trim((string) ($row['notes'] ?? '')) ?: null,
+                            'evidence_paths' => [],
+                            'status' => 'menunggu_approval',
+                            'created_by' => auth()->id(),
+                            'submitted_by' => auth()->id(),
+                            'submitted_at' => now(),
+                        ]));
+                    } catch (ValidationException $exception) {
+                        $message = collect($exception->errors())->flatten()->first();
+                        $errors[] = 'Baris ' . $rowNumber . ': ' . $message;
+                    }
+                }
+
+                if ($errors) {
+                    throw ValidationException::withMessages(['import_file' => implode(' ', array_slice($errors, 0, 5))]);
+                }
+            });
+        } catch (ValidationException $exception) {
+            return back()->with('error', collect($exception->errors())->flatten()->implode(' '));
+        }
+
+        $createdTransactions->each(fn (FinanceTransaction $transaction) => $this->notifyFinanceApprovers($transaction));
+
+        return redirect()
+            ->route('finance-transactions.index')
+            ->with('success', $createdTransactions->count() . ' transaksi berhasil diimport. Nomor transaksi dibuat otomatis dan status diset Awaiting.');
     }
 
     public function show(FinanceTransaction $finance_transaction): View
@@ -219,6 +328,110 @@ class FinanceTransactionController extends Controller
             'evidence.*' => 'file|mimes:jpg,jpeg,png,webp,pdf|max:4096',
             'notes' => 'nullable|string',
         ]);
+    }
+
+    private function readImportRows(UploadedFile $file): array
+    {
+        $handle = fopen($file->getRealPath(), 'rb');
+        if (!$handle) {
+            return [[], ['File import tidak bisa dibaca.']];
+        }
+
+        $firstLine = fgets($handle);
+        if ($firstLine === false) {
+            fclose($handle);
+            return [[], []];
+        }
+
+        $delimiter = $this->detectCsvDelimiter($firstLine);
+        rewind($handle);
+
+        $headers = fgetcsv($handle, 0, $delimiter);
+        if (!$headers) {
+            fclose($handle);
+            return [[], []];
+        }
+
+        $headers = array_map(fn ($header) => Str::of(trim((string) $header, "\xEF\xBB\xBF \t\n\r\0\x0B"))->lower()->replace(' ', '_')->toString(), $headers);
+        $requiredHeaders = ['transaction_type', 'transaction_date', 'activity', 'amount', 'finance_item_code', 'bank_account_code'];
+        $missingHeaders = array_diff($requiredHeaders, $headers);
+        if ($missingHeaders) {
+            fclose($handle);
+            return [[], ['Header wajib belum ada: ' . implode(', ', $missingHeaders) . '.']];
+        }
+
+        $rows = [];
+        $rowNumber = 1;
+        while (($values = fgetcsv($handle, 0, $delimiter)) !== false) {
+            $rowNumber++;
+            if (count(array_filter($values, fn ($value) => trim((string) $value) !== '')) === 0) {
+                continue;
+            }
+
+            $row = [];
+            foreach ($headers as $index => $header) {
+                $row[$header] = $values[$index] ?? null;
+            }
+            $rows[$rowNumber] = $row;
+        }
+        fclose($handle);
+
+        return [$rows, []];
+    }
+
+    private function detectCsvDelimiter(string $line): string
+    {
+        return collect([',' => substr_count($line, ','), ';' => substr_count($line, ';'), "\t" => substr_count($line, "\t")])
+            ->sortDesc()
+            ->keys()
+            ->first() ?: ',';
+    }
+
+    private function normalizeImportType(string $value): ?string
+    {
+        $value = Str::of($value)->lower()->trim()->replace([' ', '-'], '_')->toString();
+
+        return match ($value) {
+            'income', 'uang_masuk', 'masuk', 'pemasukan' => 'income',
+            'expense', 'uang_keluar', 'keluar', 'pengeluaran' => 'expense',
+            default => null,
+        };
+    }
+
+    private function parseImportDate(?string $value): ?Carbon
+    {
+        $value = trim((string) $value);
+        if ($value === '') {
+            return null;
+        }
+
+        foreach (['Y-m-d', 'd/m/Y', 'd-m-Y', 'm/d/Y'] as $format) {
+            try {
+                return Carbon::createFromFormat($format, $value)->startOfDay();
+            } catch (\Throwable) {
+                //
+            }
+        }
+
+        try {
+            return Carbon::parse($value)->startOfDay();
+        } catch (\Throwable) {
+            return null;
+        }
+    }
+
+    private function parseImportAmount(?string $value): float
+    {
+        $value = trim((string) $value);
+        if ($value === '') {
+            return 0;
+        }
+
+        $value = str_replace(['Rp', 'rp', ' ', ',00'], '', $value);
+        $value = str_replace('.', '', $value);
+        $value = str_replace(',', '.', $value);
+
+        return (float) $value;
     }
 
     private function assertItemMatches(FinanceItem $item, int|string $categoryId): void
