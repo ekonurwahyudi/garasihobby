@@ -3,11 +3,14 @@
 namespace App\Http\Controllers\Finance;
 
 use App\Http\Controllers\Controller;
+use App\Models\AssetPurchase;
 use App\Models\BankAccount;
 use App\Models\DebtReceivable;
+use App\Models\FinancialBalanceCutoff;
 use App\Models\FinanceCategory;
 use App\Models\FinanceItem;
 use App\Models\FinanceTransaction;
+use App\Models\Material;
 use App\Models\Order;
 use App\Models\User;
 use Carbon\Carbon;
@@ -38,6 +41,56 @@ class FinanceTransactionController extends Controller
     public function create(): View
     {
         return view('finance.transactions.create', $this->formData());
+    }
+
+    public function balanceSheet(Request $request): View
+    {
+        $cutoffs = FinancialBalanceCutoff::latest('cutoff_date')->latest('id')->get();
+        $selectedCutoff = $request->filled('cutoff_id')
+            ? $cutoffs->firstWhere('id', (int) $request->cutoff_id)
+            : $cutoffs->first();
+
+        $year = (int) ($request->get('year') ?: ($selectedCutoff?->year ?: now()->year));
+        $cutoffDate = $selectedCutoff?->cutoff_date ?: Carbon::create($year, 12, 31);
+        $snapshot = $selectedCutoff ?: (object) $this->balanceSnapshot($year, $cutoffDate);
+
+        return view('finance.transactions.balance-sheet', [
+            'cutoffs' => $cutoffs,
+            'selectedCutoff' => $selectedCutoff,
+            'year' => $year,
+            'cutoffDate' => $cutoffDate,
+            'snapshot' => $snapshot,
+        ]);
+    }
+
+    public function storeBalanceCutoff(Request $request): RedirectResponse
+    {
+        $data = $request->validate([
+            'year' => 'required|integer|min:2020|max:2100',
+            'label' => 'nullable|string|max:150',
+        ]);
+
+        $year = (int) $data['year'];
+        $cutoffDate = Carbon::create($year, 12, 31);
+        $snapshot = $this->balanceSnapshot($year, $cutoffDate);
+
+        $cutoff = FinancialBalanceCutoff::updateOrCreate(
+            ['year' => $year, 'cutoff_date' => $cutoffDate->toDateString()],
+            array_merge($snapshot, [
+                'cutoff_number' => FinancialBalanceCutoff::where('year', $year)->whereDate('cutoff_date', $cutoffDate)->value('cutoff_number') ?: $this->balanceCutoffNumber(),
+                'label' => $data['label'] ?? null,
+                'created_by' => auth()->id(),
+            ])
+        );
+
+        return redirect()->route('finance-transactions.balance-sheet', ['cutoff_id' => $cutoff->id])->with('success', 'Cut off neraca tahun ' . $year . ' berhasil disimpan.');
+    }
+
+    public function destroyBalanceCutoff(FinancialBalanceCutoff $financial_balance_cutoff): RedirectResponse
+    {
+        $financial_balance_cutoff->delete();
+
+        return redirect()->route('finance-transactions.balance-sheet')->with('success', 'Cut off neraca berhasil dihapus.');
     }
 
     public function store(Request $request): RedirectResponse
@@ -312,6 +365,78 @@ class FinanceTransactionController extends Controller
             'items' => FinanceItem::with('category')->where('is_active', true)->orderBy('name')->get(),
             'bankAccounts' => BankAccount::where('is_active', true)->orderBy('bank_name')->get(),
         ];
+    }
+
+    private function balanceSnapshot(int $year, Carbon $cutoffDate): array
+    {
+        $startDate = Carbon::create($year, 1, 1)->startOfDay();
+        $endDate = $cutoffDate->copy()->endOfDay();
+
+        $cashBank = BankAccount::query()
+            ->with(['transactions' => fn ($query) => $query->where('status', 'disetujui')->whereDate('transaction_date', '<=', $endDate)])
+            ->get()
+            ->sum(function (BankAccount $bank) {
+                $mutation = $bank->transactions->sum(fn (FinanceTransaction $transaction) => $transaction->transaction_type === 'income' ? (float) $transaction->amount : -((float) $transaction->amount));
+                return (float) $bank->opening_balance + $mutation;
+            });
+
+        $receivables = (float) DebtReceivable::where('status', 'disetujui')
+            ->where('type', 'receivable')
+            ->whereDate('transaction_date', '<=', $endDate)
+            ->sum('remaining_amount');
+        $payables = (float) DebtReceivable::where('status', 'disetujui')
+            ->where('type', 'debt')
+            ->whereDate('transaction_date', '<=', $endDate)
+            ->sum('remaining_amount');
+        $inventory = (float) Material::with('stock')->get()->sum(fn (Material $material) => (float) ($material->cost_price ?: $material->price) * (float) ($material->stock?->qty ?? 0));
+        $fixedAssetsGross = (float) AssetPurchase::where('status', 'disetujui')
+            ->whereDate('purchase_date', '<=', $endDate)
+            ->sum('purchase_amount');
+        $fixedAssetsNet = (float) AssetPurchase::where('status', 'disetujui')
+            ->whereDate('purchase_date', '<=', $endDate)
+            ->sum('book_value');
+        $accumulatedDepreciation = max(0, $fixedAssetsGross - $fixedAssetsNet);
+        $income = (float) FinanceTransaction::where('status', 'disetujui')
+            ->where('transaction_type', 'income')
+            ->whereBetween('transaction_date', [$startDate->toDateString(), $endDate->toDateString()])
+            ->sum('amount');
+        $expense = (float) FinanceTransaction::where('status', 'disetujui')
+            ->where('transaction_type', 'expense')
+            ->whereBetween('transaction_date', [$startDate->toDateString(), $endDate->toDateString()])
+            ->sum('amount');
+        $currentYearProfit = $income - $expense;
+        $totalAssets = $cashBank + $receivables + $inventory + $fixedAssetsNet;
+        $totalLiabilities = $payables;
+        $ownerEquity = $totalAssets - $totalLiabilities - $currentYearProfit;
+        $totalEquity = $ownerEquity + $currentYearProfit;
+
+        return [
+            'year' => $year,
+            'cutoff_date' => $endDate->toDateString(),
+            'cash_bank' => $cashBank,
+            'receivables' => $receivables,
+            'inventory' => $inventory,
+            'fixed_assets_gross' => $fixedAssetsGross,
+            'accumulated_depreciation' => $accumulatedDepreciation,
+            'fixed_assets_net' => $fixedAssetsNet,
+            'total_assets' => $totalAssets,
+            'payables' => $payables,
+            'owner_equity' => $ownerEquity,
+            'current_year_profit' => $currentYearProfit,
+            'total_liabilities' => $totalLiabilities,
+            'total_equity' => $totalEquity,
+        ];
+    }
+
+    private function balanceCutoffNumber(): string
+    {
+        $prefix = 'NR-' . now()->format('y') . '-';
+        $last = FinancialBalanceCutoff::where('cutoff_number', 'like', $prefix . '%')
+            ->lockForUpdate()
+            ->orderByDesc('cutoff_number')
+            ->value('cutoff_number');
+
+        return $prefix . str_pad((string) ($last ? ((int) Str::afterLast($last, '-') + 1) : 1), 5, '0', STR_PAD_LEFT);
     }
 
     private function validatedData(Request $request): array

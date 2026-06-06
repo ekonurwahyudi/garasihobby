@@ -194,6 +194,9 @@ Route::middleware(['auth'])->group(function () {
     // Keuangan - Input Keuangan
     Route::middleware('can:finance-transactions.view')->group(function () {
         Route::get('/keuangan/transaksi', [FinanceTransactionController::class, 'index'])->name('finance-transactions.index');
+        Route::get('/keuangan/transaksi/neraca', [FinanceTransactionController::class, 'balanceSheet'])->name('finance-transactions.balance-sheet');
+        Route::post('/keuangan/transaksi/neraca/cutoff', [FinanceTransactionController::class, 'storeBalanceCutoff'])->middleware('can:finance-transactions.create')->name('finance-transactions.balance-sheet.cutoff');
+        Route::delete('/keuangan/transaksi/neraca/cutoff/{financial_balance_cutoff}', [FinanceTransactionController::class, 'destroyBalanceCutoff'])->middleware('can:finance-transactions.delete')->name('finance-transactions.balance-sheet.cutoff.destroy');
         Route::get('/keuangan/transaksi/create', [FinanceTransactionController::class, 'create'])->middleware('can:finance-transactions.create')->name('finance-transactions.create');
         Route::post('/keuangan/transaksi', [FinanceTransactionController::class, 'store'])->middleware('can:finance-transactions.create')->name('finance-transactions.store');
         Route::post('/keuangan/transaksi/import', [FinanceTransactionController::class, 'import'])->middleware('can:finance-transactions.create')->name('finance-transactions.import');

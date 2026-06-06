@@ -11,6 +11,9 @@
 @endsection
 
 @section('toolbar_actions')
+    <a href="{{ route('finance-transactions.balance-sheet') }}" class="btn btn-sm btn-info d-inline-flex align-items-center gap-2">
+        <i class="ki-duotone ki-chart-pie-simple fs-3"><span class="path1"></span><span class="path2"></span></i> Neraca Keuangan
+    </a>
     <a href="#" class="btn btn-sm btn-success" id="exportExcel">
         <i class="ki-duotone ki-file-down fs-3"><span class="path1"></span><span class="path2"></span></i> Export Excel
     </a>
