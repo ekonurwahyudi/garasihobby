@@ -15,24 +15,41 @@
 
 @push('styles')
 <style>
-.bank-summary-card{border:1px solid #e4e8f0;border-radius:14px;box-shadow:0 10px 30px rgba(15,23,42,.04)}
-.bank-grid{display:grid;grid-template-columns:repeat(1,minmax(0,1fr));gap:14px}
+.bank-summary-card{border:1px solid #e4e8f0;border-radius:14px;box-shadow:0 12px 30px rgba(15,23,42,.05)}
+.bank-grid{display:grid;grid-template-columns:repeat(1,minmax(0,1fr));gap:18px}
 @media (min-width:768px){.bank-grid{grid-template-columns:repeat(2,minmax(0,1fr))}}
 @media (min-width:1200px){.bank-grid{grid-template-columns:repeat(4,minmax(0,1fr))}}
-.bank-wallet-card{border:1px solid #e4e8f0;border-radius:12px;background:#fff;padding:16px;height:100%;transition:transform .15s ease,box-shadow .15s ease,border-color .15s ease}
-.bank-wallet-card:hover{transform:translateY(-2px);box-shadow:0 14px 28px rgba(15,23,42,.08);border-color:#cfd8e7}
-.bank-logo-box{width:48px;height:48px;border:1px solid #e4e8f0;border-radius:10px;background:#fff;display:flex;align-items:center;justify-content:center;overflow:hidden;flex-shrink:0}
-.bank-logo-box img{max-width:38px;max-height:26px;object-fit:contain}
-.bank-logo-fallback{font-size:11px;font-weight:800;letter-spacing:.04em}
-.bank-action-soft{width:34px;height:34px;border-radius:9px;display:inline-flex;align-items:center;justify-content:center;border:0}
-.bank-balance{font-size:20px;font-weight:700;line-height:1.2}
-.bank-card-name{font-size:14px;font-weight:700;color:#061535;line-height:1.25;max-width:160px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.bank-card-owner{font-size:12px;color:#667085;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:160px}
-.bank-small-label{font-size:11px;letter-spacing:.03em}
-.bank-mutasi-link{font-size:12px}
+.bank-wallet-card{position:relative;min-height:218px;border:1px solid #e4e8f0;border-radius:14px;background:#fff;padding:18px;height:100%;overflow:hidden;transition:transform .16s ease,box-shadow .16s ease,border-color .16s ease}
+.bank-wallet-card::after{content:"";position:absolute;width:118px;height:118px;right:-56px;top:-58px;border-radius:999px;background:#f5f9ff}
+.bank-wallet-card:hover{transform:translateY(-2px);box-shadow:0 16px 34px rgba(15,23,42,.08);border-color:#d8e1ef}
+.bank-card-head{position:relative;z-index:1;display:flex;align-items:flex-start;justify-content:space-between;gap:12px;margin-bottom:18px}
+.bank-card-identity{display:flex;align-items:center;gap:12px;min-width:0;flex:1 1 auto}
+.bank-logo-box{width:54px;height:54px;border:1px solid #e4e8f0;border-radius:10px;background:#fff;display:flex;align-items:center;justify-content:center;overflow:hidden;flex:0 0 54px}
+.bank-logo-box img{max-width:42px;max-height:30px;object-fit:contain}
+.bank-logo-fallback{font-size:12px;font-weight:750;letter-spacing:.03em}
+.bank-action-soft{position:relative;z-index:1;width:40px;height:40px;border-radius:10px;display:inline-flex;align-items:center;justify-content:center;border:0}
+.bank-balance-panel{position:relative;z-index:1;border:1px solid #edf1f7;border-radius:12px;background:#fbfdff;padding:13px;margin-top:8px}
+.bank-balance-row{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:8px}
+.bank-balance{font-size:22px;font-weight:650;line-height:1.2;overflow-wrap:anywhere}
+.bank-balance.is-plus{color:#00a884}
+.bank-balance.is-minus{color:#1d4ed8}
+.bank-balance-badge{display:inline-flex;align-items:center;min-height:24px;border-radius:8px;padding:4px 8px;font-size:11px;font-weight:650}
+.bank-balance-badge.is-plus{background:#dcfce7;color:#00a884}
+.bank-balance-badge.is-minus{background:#e8f3ff;color:#1d4ed8}
+.bank-card-name{font-size:15px;font-weight:700;color:#061535;line-height:1.25;max-width:100%;overflow:hidden;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;word-break:break-word}
+.bank-card-owner{font-size:12px;font-weight:500;color:#667085;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:100%;text-transform:uppercase;margin-top:3px}
+.bank-small-label{font-size:11px;font-weight:650;letter-spacing:.03em}
+.bank-card-footer{position:relative;z-index:1;display:flex;align-items:center;justify-content:space-between;gap:12px;margin-top:14px}
+.bank-mutasi-link{display:inline-flex;align-items:center;gap:4px;font-size:12px;font-weight:650}
+.bank-mutasi-link i{color:currentColor!important}
 .bank-total-pill{border:1px solid #e4e8f0;border-radius:12px;padding:10px 14px;background:#f8fbff;text-align:right}
 .bank-total-pill .label{font-size:11px;color:#667085;text-transform:uppercase;letter-spacing:.03em}
-.bank-total-pill .value{font-size:18px;font-weight:800;color:#1d4ed8;line-height:1.2}
+.bank-total-pill .value{font-size:18px;font-weight:650;color:#1d4ed8;line-height:1.2}
+.bank-table-bank{display:flex;align-items:center;gap:10px;min-width:190px}
+.bank-table-logo{width:38px;height:38px;border:1px solid #e4e8f0;border-radius:9px;background:#fff;display:inline-flex;align-items:center;justify-content:center;overflow:hidden;flex:0 0 38px}
+.bank-table-logo img{max-width:30px;max-height:22px;object-fit:contain}
+.bank-table-logo span{font-size:10px;font-weight:750;color:#1682ff;letter-spacing:.03em}
+.bank-table-name{color:#061535;font-weight:650;line-height:1.25;max-width:220px;overflow:hidden;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;word-break:break-word}
 .select2-container--bootstrap5 .select2-selection--single .select2-selection__rendered{line-height:1.5}
 </style>
 @endpush
@@ -100,15 +117,15 @@
                     (str_contains($bankName, 'DKI') ? 'Bank DKI.svg' : null))))))))))))))));
                 $bankLogoUrl = $bankLogoFile
                     ? 'https://commons.wikimedia.org/wiki/Special:FilePath/' . rawurlencode($bankLogoFile) . '?width=160'
-                    : (str_contains($bankName, 'CASH') ? asset('assets/media/logos.png') : null);
+                    : (str_contains($bankName, 'CASH') ? asset('assets/media/favicon.png') : null);
                 $nomorRekening = preg_replace('/\s+/', '', (string) ($account->account_number ?? ''));
                 $maskedRekening = $nomorRekening ? '**** ' . substr($nomorRekening, -4) : 'Nomor belum diisi';
-                $balanceClass = (float) $account->balance < 0 ? 'text-danger' : ($palette[0] === '#00a884' ? 'text-success' : 'text-primary');
+                $isMinus = (float) $account->balance < 0;
             @endphp
             <div class="bank-wallet-card">
-                <div class="d-flex justify-content-between align-items-start mb-5">
-                    <div class="d-flex align-items-center min-w-0">
-                        <div class="bank-logo-box me-3">
+                <div class="bank-card-head">
+                    <div class="bank-card-identity">
+                        <div class="bank-logo-box">
                             @if($bankLogoUrl)
                                 <img src="{{ $bankLogoUrl }}" alt="{{ $account->bank_name }}">
                             @else
@@ -126,9 +143,14 @@
                     </button>
                     @endcan
                 </div>
-                <div class="text-muted text-uppercase mb-2 bank-small-label">Saldo Tersedia</div>
-                <div class="bank-balance {{ $balanceClass }}">Rp {{ number_format($account->balance, 0, ',', '.') }}</div>
-                <div class="d-flex justify-content-between align-items-center mt-4">
+                <div class="bank-balance-panel">
+                    <div class="bank-balance-row">
+                        <div class="text-muted text-uppercase bank-small-label">Saldo Tersedia</div>
+                        <span class="bank-balance-badge {{ $isMinus ? 'is-minus' : 'is-plus' }}">{{ $isMinus ? 'Minus' : ($account->is_active ? 'Aktif' : 'Nonaktif') }}</span>
+                    </div>
+                    <div class="bank-balance {{ $isMinus ? 'is-minus' : 'is-plus' }}">Rp {{ number_format($account->balance, 0, ',', '.') }}</div>
+                </div>
+                <div class="bank-card-footer">
                     <span class="text-muted fs-8">{{ $maskedRekening }}</span>
                     <a href="{{ route('bank-accounts.show', $account) }}" class="fw-semibold bank-mutasi-link" style="color:{{ $palette[0] }}">Mutasi <i class="ki-duotone ki-arrow-right fs-5"></i></a>
                 </div>
@@ -143,7 +165,36 @@
 
 <div class="card card-flush"><div class="card-header border-0 pt-6"><div class="card-title"><span class="text-gray-600">Daftar rekening dan saldo saat ini.</span></div><div class="card-toolbar position-relative"><i class="ki-duotone ki-magnifier fs-3 position-absolute ms-5"><span class="path1"></span><span class="path2"></span></i><input id="searchInput" class="form-control w-250px ps-12" placeholder="Cari account..."></div></div>
 <div class="card-body pt-0"><table id="kt_table" class="table table-striped table-row-bordered gy-5 gs-7 border rounded"><thead><tr class="fw-semibold fs-6 text-gray-800"><th>No</th><th>Kode</th><th>Bank / Cash</th><th>Pemilik</th><th>No. Rekening</th><th>Saldo</th><th>Status</th><th class="text-end">Aksi</th></tr></thead><tbody>
-@foreach($data as $i => $item)<tr><td>{{ $i+1 }}</td><td>{{ $item->code }}</td><td>{{ $item->bank_name }}</td><td>{{ $item->account_name ?? '-' }}</td><td>{{ $item->account_number ?? '-' }}</td><td>Rp {{ number_format($item->balance,0,',','.') }}</td><td><span class="badge {{ $item->is_active?'badge-light-success':'badge-light' }}">{{ $item->is_active?'Aktif':'Nonaktif' }}</span></td><td class="text-end">
+@foreach($data as $i => $item)
+@php
+    $tableBankName = strtoupper($item->bank_name ?? 'BANK');
+    $tableBankWords = collect(explode(' ', preg_replace('/[^A-Za-z0-9 ]/', '', $item->bank_name ?? 'Bank')))->filter();
+    $tableBankLogo = $tableBankWords->count() > 1
+        ? $tableBankWords->map(fn($word) => substr($word, 0, 1))->take(3)->implode('')
+        : strtoupper(substr($item->bank_name ?? 'B', 0, 3));
+    $tableBankLogoFile = str_contains($tableBankName, 'BCA DIGITAL') ? 'BCA Digital logo.svg' :
+        (str_contains($tableBankName, 'BCA SYARIAH') ? 'BCA Syariah.svg' :
+        (str_contains($tableBankName, 'BCA') ? 'Bank Central Asia.svg' :
+        (str_contains($tableBankName, 'BRI') ? 'BRI 2020.svg' :
+        (str_contains($tableBankName, 'BNI') ? 'Bank Negara Indonesia logo (2004).svg' :
+        (str_contains($tableBankName, 'MANDIRI') ? 'Bank Mandiri logo 2016.svg' :
+        (str_contains($tableBankName, 'BSI') || str_contains($tableBankName, 'SYARIAH INDONESIA') ? 'Bank Syariah Indonesia.svg' :
+        (str_contains($tableBankName, 'BTN') ? 'Bank BTN logo.svg' :
+        (str_contains($tableBankName, 'CIMB') ? 'CIMB Niaga logo.svg' :
+        (str_contains($tableBankName, 'DANAMON') ? 'Danamon.svg' :
+        (str_contains($tableBankName, 'MEGA') ? 'Bank Mega 2013.svg' :
+        (str_contains($tableBankName, 'PERMATA') ? 'Permata Bank (2024).svg' :
+        (str_contains($tableBankName, 'PANIN') ? 'Logo Panin Bank.svg' :
+        (str_contains($tableBankName, 'JAGO') ? 'Logo-jago.svg' :
+        (str_contains($tableBankName, 'SEABANK') || str_contains($tableBankName, 'SEA BANK') ? 'SeaBank.svg' :
+        (str_contains($tableBankName, 'UOB') ? 'UOB Logo (2022).svg' :
+        (str_contains($tableBankName, 'DKI') ? 'Bank DKI.svg' : null))))))))))))))));
+    $tableBankLogoUrl = $tableBankLogoFile
+        ? 'https://commons.wikimedia.org/wiki/Special:FilePath/' . rawurlencode($tableBankLogoFile) . '?width=120'
+        : (str_contains($tableBankName, 'CASH') ? asset('assets/media/favicon.png') : null);
+    $tableBalance = (float) $item->balance;
+@endphp
+<tr><td>{{ $i+1 }}</td><td>{{ $item->code }}</td><td><div class="bank-table-bank"><div class="bank-table-logo">@if($tableBankLogoUrl)<img src="{{ $tableBankLogoUrl }}" alt="{{ $item->bank_name }}">@else<span>{{ $tableBankLogo }}</span>@endif</div><div class="bank-table-name" title="{{ $item->bank_name }}">{{ $item->bank_name }}</div></div></td><td>{{ $item->account_name ?? '-' }}</td><td>{{ $item->account_number ?? '-' }}</td><td class="{{ $tableBalance < 0 ? 'text-danger' : 'text-gray-900' }} fw-semibold">Rp {{ number_format($item->balance,0,',','.') }}</td><td><span class="badge {{ $item->is_active?'badge-light-success':'badge-light' }}">{{ $item->is_active?'Aktif':'Nonaktif' }}</span></td><td class="text-end">
 <a class="btn btn-icon btn-sm btn-info" href="{{ route('bank-accounts.show',$item) }}"><i class="ki-duotone ki-eye fs-3 text-white"><span class="path1"></span><span class="path2"></span><span class="path3"></span></i></a>
 @can('bank-accounts.edit')<button class="btn btn-icon btn-sm btn-warning" onclick="openEditModal('{{ $item->id }}')"><i class="ki-duotone ki-pencil fs-3 text-white"><span class="path1"></span><span class="path2"></span></i></button>@endcan
 @can('bank-accounts.delete')<button class="btn btn-icon btn-sm btn-danger" onclick="deleteItem('{{ $item->id }}',@js($item->bank_name))"><i class="ki-duotone ki-trash fs-3 text-white"><span class="path1"></span><span class="path2"></span><span class="path3"></span><span class="path4"></span><span class="path5"></span></i></button>@endcan

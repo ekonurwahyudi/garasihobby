@@ -12,7 +12,6 @@ use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
-use Illuminate\Validation\ValidationException;
 use Illuminate\View\View;
 
 class BankAccountController extends Controller
@@ -169,10 +168,6 @@ class BankAccountController extends Controller
         DB::transaction(function () use ($data) {
             $from = BankAccount::lockForUpdate()->findOrFail($data['from_bank_account_id']);
             $to = BankAccount::lockForUpdate()->findOrFail($data['to_bank_account_id']);
-
-            if ((float) $from->balance < (float) $data['amount']) {
-                throw ValidationException::withMessages(['amount' => 'Saldo rekening asal tidak mencukupi.']);
-            }
 
             $from->decrement('balance', $data['amount']);
             $to->increment('balance', $data['amount']);

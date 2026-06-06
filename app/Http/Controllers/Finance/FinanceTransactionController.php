@@ -237,11 +237,7 @@ class FinanceTransactionController extends Controller
 
     private function applyDelta(BankAccount $bank, float $delta): void
     {
-        $newBalance = (float) $bank->balance + $delta;
-        if ($newBalance < 0) {
-            throw ValidationException::withMessages(['amount' => 'Saldo rekening tidak mencukupi untuk transaksi ini.']);
-        }
-        $bank->update(['balance' => $newBalance]);
+        $bank->update(['balance' => (float) $bank->balance + $delta]);
     }
 
     private function transactionNumber(): string

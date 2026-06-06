@@ -11,7 +11,7 @@ class AssetPurchase extends Model
     use HasFactory;
 
     protected $fillable = [
-        'asset_number', 'asset_name', 'asset_category', 'asset_category_id', 'purchase_date', 'supplier',
+        'asset_number', 'asset_name', 'asset_category', 'asset_category_id', 'purchase_date', 'supplier', 'serial_number', 'condition_status',
         'purchase_amount', 'useful_life_years', 'residual_value', 'depreciation_method',
         'depreciation_percentage', 'book_value', 'bank_account_id', 'asset_photo_paths',
         'evidence_paths', 'notes', 'status', 'submitted_by', 'submitted_at', 'approved_by',

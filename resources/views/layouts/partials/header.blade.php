@@ -74,6 +74,10 @@
                         <div class="separator my-0"></div>
 
                         <div class="px-4 py-3">
+                            <a href="{{ route('my-account.edit') }}" class="menu-link px-4 py-3 rounded {{ request()->routeIs('my-account.*') ? 'active' : '' }}">
+                                <i class="ki-outline ki-user fs-2 me-3 text-primary"></i>
+                                My Account
+                            </a>
                             <form action="{{ route('logout') }}" method="POST" class="m-0">
                                 @csrf
                                 <button type="submit" class="menu-link px-4 py-3 w-100 text-start bg-transparent border-0 rounded text-danger">

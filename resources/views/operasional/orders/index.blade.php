@@ -43,23 +43,23 @@
     @foreach($orderStats as $stat)
     <div class="col">
         <div class="order-stat-card order-stat-{{ $stat['tone'] }} h-100">
-            <div class="order-stat-top">
-                <span class="order-stat-icon"><i class="ki-duotone {{ $stat['icon'] }} fs-2"><span class="path1"></span><span class="path2"></span><span class="path3"></span></i></span>
-                <span class="order-stat-hint">{{ $stat['hint'] }}</span>
+            <span class="order-stat-icon"><i class="ki-duotone {{ $stat['icon'] }} fs-2"><span class="path1"></span><span class="path2"></span><span class="path3"></span></i></span>
+            <div class="min-w-0">
+                <div class="order-stat-label">{{ $stat['label'] }}</div>
+                <div class="order-stat-value">{{ number_format($stat['value'], 0, ',', '.') }}</div>
+                <div class="order-stat-hint">{{ $stat['hint'] }}</div>
             </div>
-            <div class="order-stat-value">{{ number_format($stat['value'], 0, ',', '.') }}</div>
-            <div class="order-stat-label">{{ $stat['label'] }}</div>
         </div>
     </div>
     @endforeach
     <div class="col">
         <div class="order-stat-card order-stat-revenue h-100">
-            <div class="order-stat-top">
-                <span class="order-stat-icon"><i class="ki-duotone ki-dollar fs-2"><span class="path1"></span><span class="path2"></span><span class="path3"></span></i></span>
-                <span class="order-stat-hint">Order selesai</span>
+            <span class="order-stat-icon"><i class="ki-duotone ki-dollar fs-2"><span class="path1"></span><span class="path2"></span><span class="path3"></span></i></span>
+            <div class="min-w-0">
+                <div class="order-stat-label">Revenue</div>
+                <div class="order-stat-value order-stat-currency">Rp {{ number_format($revenue, 0, ',', '.') }}</div>
+                <div class="order-stat-hint">Order selesai</div>
             </div>
-            <div class="order-stat-value order-stat-currency">Rp {{ number_format($revenue, 0, ',', '.') }}</div>
-            <div class="order-stat-label">Revenue</div>
         </div>
     </div>
 </div>
@@ -166,84 +166,61 @@
 @push('styles')
 <style>
 .order-stat-card {
-    position: relative;
-    overflow: hidden;
     border: 1px solid #e4e8f0;
-    border-radius: 18px;
+    border-radius: 14px;
     background: #fff;
     padding: 20px;
-    min-height: 142px;
-    box-shadow: 0 12px 28px rgba(15, 23, 42, .05);
+    min-height: 132px;
+    box-shadow: 0 12px 30px rgba(15, 23, 42, .05);
+    display: flex;
+    align-items: flex-start;
+    gap: 16px;
     transition: transform .15s ease, box-shadow .15s ease;
-}
-.order-stat-card::after {
-    content: "";
-    position: absolute;
-    width: 118px;
-    height: 118px;
-    right: -48px;
-    top: -48px;
-    border-radius: 50%;
-    background: rgba(255,255,255,.72);
 }
 .order-stat-card:hover {
     transform: translateY(-2px);
     box-shadow: 0 16px 34px rgba(15, 23, 42, .08);
 }
-.order-stat-top {
-    position: relative;
-    z-index: 1;
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    gap: 12px;
-    margin-bottom: 18px;
-}
 .order-stat-icon {
-    width: 44px;
-    height: 44px;
-    border-radius: 14px;
+    width: 42px;
+    height: 42px;
+    border-radius: 11px;
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    background: rgba(255,255,255,.86);
+    flex: 0 0 42px;
 }
 .order-stat-hint {
-    color: #64748b;
-    font-size: 11px;
-    font-weight: 700;
-    text-transform: uppercase;
+    color: #8a96a8;
+    font-size: 12px;
+    font-weight: 500;
+    margin-top: 8px;
 }
 .order-stat-value {
-    position: relative;
-    z-index: 1;
-    color: #0f172a;
-    font-size: 30px;
-    font-weight: 800;
-    line-height: 1;
+    color: #061535;
+    font-size: 23px;
+    font-weight: 750;
+    line-height: 1.2;
+    margin-top: 8px;
+    overflow-wrap: anywhere;
 }
 .order-stat-currency {
-    font-size: 20px;
+    font-size: 21px;
     line-height: 1.2;
 }
 .order-stat-label {
-    position: relative;
-    z-index: 1;
     color: #64748b;
-    font-size: 13px;
-    font-weight: 700;
-    margin-top: 8px;
+    font-size: 12px;
+    font-weight: 650;
+    text-transform: uppercase;
 }
-.order-stat-info { background: linear-gradient(135deg,#eff6ff 0%,#fff 70%); }
-.order-stat-primary { background: linear-gradient(135deg,#eef4ff 0%,#fff 70%); }
-.order-stat-warning { background: linear-gradient(135deg,#fff8e6 0%,#fff 70%); }
-.order-stat-success,
-.order-stat-revenue { background: linear-gradient(135deg,#ecfdf3 0%,#fff 70%); }
-.order-stat-info .order-stat-icon { color: #0ea5e9; }
-.order-stat-primary .order-stat-icon { color: #1b84ff; }
-.order-stat-warning .order-stat-icon { color: #f59e0b; }
+.order-stat-info .order-stat-icon { background: #e7f9ff; color: #00a3c7; }
+.order-stat-primary .order-stat-icon { background: #e8f3ff; color: #1682ff; }
+.order-stat-warning .order-stat-icon { background: #fff3d8; color: #ff9f0a; }
 .order-stat-success .order-stat-icon,
-.order-stat-revenue .order-stat-icon { color: #12a150; }
+.order-stat-revenue .order-stat-icon { background: #e7f8ef; color: #12a150; }
+.order-stat-danger .order-stat-icon { background: #ffecef; color: #f1416c; }
+.order-stat-icon i { color: currentColor !important; }
 .order-status-tabs {
     border-bottom-width: 3px;
 }

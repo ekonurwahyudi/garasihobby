@@ -109,7 +109,7 @@
         (str_contains($bankName, 'DKI') ? 'Bank DKI.svg' : null))))))))))))))));
     $bankLogoUrl = $bankLogoFile
         ? 'https://commons.wikimedia.org/wiki/Special:FilePath/' . rawurlencode($bankLogoFile) . '?width=160'
-        : (str_contains($bankName, 'CASH') ? asset('assets/media/logos.png') : null);
+        : (str_contains($bankName, 'CASH') ? asset('assets/media/favicon.png') : null);
     $activityLabel = $finance_transaction->activity ?: $finance_transaction->description;
     $isOrderPayment = ($finance_transaction->item?->code === 'AUTO-ORDER') || \Illuminate\Support\Str::startsWith($activityLabel, 'Pembayaran Order');
     $categoryLabel = $isOrderPayment ? 'Order Bengkel' : ($finance_transaction->item?->category?->name ?? '-');

@@ -15,7 +15,6 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
-use Illuminate\Validation\ValidationException;
 use Illuminate\View\View;
 
 class DebtReceivableController extends Controller
@@ -120,10 +119,6 @@ class DebtReceivableController extends Controller
             $isDebt = $debt_receivable->type === 'debt';
             $principal = (float) $debt_receivable->amount;
 
-            if (! $isDebt && (float) $bank->balance < $principal) {
-                throw ValidationException::withMessages(['bank_account_id' => 'Saldo bank tidak mencukupi untuk pencairan piutang.']);
-            }
-
             $isDebt ? $bank->increment('balance', $principal) : $bank->decrement('balance', $principal);
             FinanceTransaction::create([
                 'transaction_number' => $this->financeTransactionNumber(),
@@ -146,10 +141,6 @@ class DebtReceivableController extends Controller
 
             $paid = (float) $debt_receivable->paid_amount;
             if ($paid > 0 && ! $debt_receivable->payments()->exists()) {
-                if ($isDebt && (float) $bank->balance < $paid) {
-                    throw ValidationException::withMessages(['bank_account_id' => 'Saldo bank tidak mencukupi untuk pembayaran hutang.']);
-                }
-
                 $isDebt ? $bank->decrement('balance', $paid) : $bank->increment('balance', $paid);
                 $finance = FinanceTransaction::create([
                     'transaction_number' => $this->financeTransactionNumber(),
@@ -228,9 +219,6 @@ class DebtReceivableController extends Controller
         DB::transaction(function () use ($request, $debt_receivable, $data) {
             $bank = BankAccount::lockForUpdate()->findOrFail($data['bank_account_id']);
             $isDebt = $debt_receivable->type === 'debt';
-            if ($isDebt && (float) $bank->balance < (float) $data['amount']) {
-                throw ValidationException::withMessages(['amount' => 'Saldo bank tidak mencukupi untuk pembayaran hutang.']);
-            }
 
             $isDebt ? $bank->decrement('balance', $data['amount']) : $bank->increment('balance', $data['amount']);
             $evidence = $this->storeFiles($request, 'evidence', 'debt-receivables/payments');
@@ -405,10 +393,6 @@ class DebtReceivableController extends Controller
 
     private function applyPaymentEffect(BankAccount $bank, bool $isDebt, float $amount): void
     {
-        if ($isDebt && (float) $bank->balance < $amount) {
-            throw ValidationException::withMessages(['amount' => 'Saldo bank tidak mencukupi untuk pembayaran hutang.']);
-        }
-
         $isDebt ? $bank->decrement('balance', $amount) : $bank->increment('balance', $amount);
     }
 
@@ -416,10 +400,6 @@ class DebtReceivableController extends Controller
     {
         $bank = BankAccount::lockForUpdate()->findOrFail($payment->bank_account_id);
         $amount = (float) $payment->amount;
-
-        if (! $isDebt && (float) $bank->balance < $amount) {
-            throw ValidationException::withMessages(['amount' => 'Saldo bank tidak mencukupi untuk membatalkan penerimaan piutang.']);
-        }
 
         $isDebt ? $bank->increment('balance', $amount) : $bank->decrement('balance', $amount);
     }

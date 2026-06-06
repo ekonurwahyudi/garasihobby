@@ -68,10 +68,10 @@
         text-align: center;
     }
     #kt_table tbody td {
-        padding: 14px 12px;
+        padding: 13px 10px;
         border-bottom: 1px solid #edf1f6;
         vertical-align: middle;
-        font-size: 13px;
+        font-size: 12.5px;
     }
     #kt_table tbody tr:last-child td {
         border-bottom: 0;
@@ -83,6 +83,11 @@
         color: #25314f;
         font-weight: 500;
         width: 54px;
+    }
+    .finance-amount-cell {
+        white-space: nowrap;
+        min-width: 124px;
+        font-size: 12.5px;
     }
     .finance-action-group {
         display: inline-flex;
@@ -244,40 +249,34 @@
         return $isOrderPayment ? 'Order Bengkel' : ($transaction->item?->category?->name ?? '-');
     })->unique()->sort()->values();
 @endphp
-<div class="row g-5 mb-6">
-    <div class="col-md-4">
-        <div class="card finance-summary-card finance-summary-income h-100">
-            <div class="card-body position-relative">
-                <div class="d-flex justify-content-between align-items-start mb-4">
-                    <div class="text-gray-600 fs-7 fw-semibold">Total Uang Masuk</div>
-                    <span class="finance-summary-icon"><i class="ki-duotone ki-arrow-up fs-2 text-success"></i></span>
-                </div>
-                <div class="text-success fw-bolder fs-2">Rp {{ number_format($totalIncome,0,',','.') }}</div>
-                <div class="text-muted fs-8 mt-1">Transaksi disetujui</div>
+<div class="row row-cols-1 row-cols-sm-2 row-cols-xl-3 g-5 mb-7">
+    <div class="col">
+        <div class="order-stat-card order-stat-success h-100">
+            <span class="order-stat-icon"><i class="ki-duotone ki-arrow-up fs-2"><span class="path1"></span><span class="path2"></span></i></span>
+            <div class="min-w-0">
+                <div class="order-stat-label">Total Uang Masuk</div>
+                <div class="order-stat-value order-stat-currency">Rp {{ number_format($totalIncome,0,',','.') }}</div>
+                <div class="order-stat-hint">Disetujui</div>
             </div>
         </div>
     </div>
-    <div class="col-md-4">
-        <div class="card finance-summary-card finance-summary-expense h-100">
-            <div class="card-body position-relative">
-                <div class="d-flex justify-content-between align-items-start mb-4">
-                    <div class="text-gray-600 fs-7 fw-semibold">Total Uang Keluar</div>
-                    <span class="finance-summary-icon"><i class="ki-duotone ki-arrow-down fs-2 text-danger"></i></span>
-                </div>
-                <div class="text-danger fw-bolder fs-2">Rp {{ number_format($totalExpense,0,',','.') }}</div>
-                <div class="text-muted fs-8 mt-1">Transaksi disetujui</div>
+    <div class="col">
+        <div class="order-stat-card order-stat-danger h-100">
+            <span class="order-stat-icon"><i class="ki-duotone ki-arrow-down fs-2"><span class="path1"></span><span class="path2"></span></i></span>
+            <div class="min-w-0">
+                <div class="order-stat-label">Total Uang Keluar</div>
+                <div class="order-stat-value order-stat-currency">Rp {{ number_format($totalExpense,0,',','.') }}</div>
+                <div class="order-stat-hint">Disetujui</div>
             </div>
         </div>
     </div>
-    <div class="col-md-4">
-        <div class="card finance-summary-card finance-summary-net h-100">
-            <div class="card-body position-relative">
-                <div class="d-flex justify-content-between align-items-start mb-4">
-                    <div class="text-gray-600 fs-7 fw-semibold">Selisih Disetujui</div>
-                    <span class="finance-summary-icon"><i class="ki-duotone ki-chart-line-up fs-2 text-primary"></i></span>
-                </div>
-                <div class="{{ $totalIncome - $totalExpense >= 0 ? 'text-primary' : 'text-danger' }} fw-bolder fs-2">Rp {{ number_format($totalIncome - $totalExpense,0,',','.') }}</div>
-                <div class="text-muted fs-8 mt-1">{{ $pendingCount }} transaksi menunggu approval</div>
+    <div class="col">
+        <div class="order-stat-card {{ $totalIncome - $totalExpense >= 0 ? 'order-stat-primary' : 'order-stat-danger' }} h-100">
+            <span class="order-stat-icon"><i class="ki-duotone ki-chart-line-up fs-2"><span class="path1"></span><span class="path2"></span></i></span>
+            <div class="min-w-0">
+                <div class="order-stat-label">Selisih Disetujui</div>
+                <div class="order-stat-value order-stat-currency">Rp {{ number_format($totalIncome - $totalExpense,0,',','.') }}</div>
+                <div class="order-stat-hint">{{ $pendingCount }} awaiting</div>
             </div>
         </div>
     </div>
@@ -392,7 +391,7 @@
                     </td>
                     <td>{{ $transaction->activity ?: $transaction->description }}</td>
                     <td>{{ $categoryLabel }}</td>
-                    <td class="{{ $transaction->transaction_type === 'income' ? 'text-success' : 'text-danger' }} fw-bold">
+                    <td class="finance-amount-cell {{ $transaction->transaction_type === 'income' ? 'text-success' : 'text-danger' }} fw-bold">
                         {{ $transaction->transaction_type === 'income' ? '+' : '-' }} Rp {{ number_format($transaction->amount,0,',','.') }}
                     </td>
                     <td>

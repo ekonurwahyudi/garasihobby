@@ -69,6 +69,6 @@ class BankAccount extends Model
             return 'https://commons.wikimedia.org/wiki/Special:FilePath/' . rawurlencode('SeaBank.svg') . '?width=160';
         }
 
-        return str_contains($bankName, 'CASH') ? asset('assets/media/logos.png') : null;
+        return str_contains($bankName, 'CASH') ? asset('assets/media/favicon.png') : null;
     }
 }

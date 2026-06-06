@@ -11,11 +11,47 @@
     $debt = $active->where('type', 'debt');
     $receivable = $active->where('type', 'receivable');
 @endphp
-<div class="row g-5 mb-6">
-    <div class="col-md-3"><div class="card finance-summary-card finance-summary-expense h-100"><div class="card-body"><div class="text-gray-600 fs-7 fw-semibold mb-4">Total Hutang</div><div class="text-danger fw-bolder fs-3">Rp {{ number_format($debt->sum('total_amount'),0,',','.') }}</div><div class="text-muted fs-8">{{ $debt->count() }} transaksi</div></div></div></div>
-    <div class="col-md-3"><div class="card finance-summary-card finance-summary-net h-100"><div class="card-body"><div class="text-gray-600 fs-7 fw-semibold mb-4">Sisa Hutang</div><div class="text-warning fw-bolder fs-3">Rp {{ number_format($debt->sum('remaining_amount'),0,',','.') }}</div><div class="text-muted fs-8">Belum dibayar</div></div></div></div>
-    <div class="col-md-3"><div class="card finance-summary-card finance-summary-income h-100"><div class="card-body"><div class="text-gray-600 fs-7 fw-semibold mb-4">Total Piutang</div><div class="text-success fw-bolder fs-3">Rp {{ number_format($receivable->sum('total_amount'),0,',','.') }}</div><div class="text-muted fs-8">{{ $receivable->count() }} transaksi</div></div></div></div>
-    <div class="col-md-3"><div class="card finance-summary-card finance-summary-net h-100"><div class="card-body"><div class="text-gray-600 fs-7 fw-semibold mb-4">Sisa Piutang</div><div class="text-primary fw-bolder fs-3">Rp {{ number_format($receivable->sum('remaining_amount'),0,',','.') }}</div><div class="text-muted fs-8">Belum diterima</div></div></div></div>
+<div class="row row-cols-1 row-cols-sm-2 row-cols-xl-4 g-5 mb-7">
+    <div class="col">
+        <div class="order-stat-card order-stat-danger h-100">
+            <span class="order-stat-icon"><i class="ki-duotone ki-arrow-down fs-2"><span class="path1"></span><span class="path2"></span></i></span>
+            <div class="min-w-0">
+                <div class="order-stat-label">Total Hutang</div>
+                <div class="order-stat-value order-stat-currency">Rp {{ number_format($debt->sum('total_amount'),0,',','.') }}</div>
+                <div class="order-stat-hint">{{ $debt->count() }} transaksi</div>
+            </div>
+        </div>
+    </div>
+    <div class="col">
+        <div class="order-stat-card order-stat-warning h-100">
+            <span class="order-stat-icon"><i class="ki-duotone ki-time fs-2"><span class="path1"></span><span class="path2"></span></i></span>
+            <div class="min-w-0">
+                <div class="order-stat-label">Sisa Hutang</div>
+                <div class="order-stat-value order-stat-currency">Rp {{ number_format($debt->sum('remaining_amount'),0,',','.') }}</div>
+                <div class="order-stat-hint">Belum dibayar</div>
+            </div>
+        </div>
+    </div>
+    <div class="col">
+        <div class="order-stat-card order-stat-success h-100">
+            <span class="order-stat-icon"><i class="ki-duotone ki-arrow-up fs-2"><span class="path1"></span><span class="path2"></span></i></span>
+            <div class="min-w-0">
+                <div class="order-stat-label">Total Piutang</div>
+                <div class="order-stat-value order-stat-currency">Rp {{ number_format($receivable->sum('total_amount'),0,',','.') }}</div>
+                <div class="order-stat-hint">{{ $receivable->count() }} transaksi</div>
+            </div>
+        </div>
+    </div>
+    <div class="col">
+        <div class="order-stat-card order-stat-primary h-100">
+            <span class="order-stat-icon"><i class="ki-duotone ki-wallet fs-2"><span class="path1"></span><span class="path2"></span></i></span>
+            <div class="min-w-0">
+                <div class="order-stat-label">Sisa Piutang</div>
+                <div class="order-stat-value order-stat-currency">Rp {{ number_format($receivable->sum('remaining_amount'),0,',','.') }}</div>
+                <div class="order-stat-hint">Belum diterima</div>
+            </div>
+        </div>
+    </div>
 </div>
 
 <div class="card card-flush finance-table-card">

@@ -15,6 +15,7 @@ use App\Http\Controllers\Master\MaterialCategoryController;
 use App\Http\Controllers\Master\MaterialController;
 use App\Http\Controllers\Master\PromoPackageController;
 use App\Http\Controllers\Master\UserController;
+use App\Http\Controllers\MyAccountController;
 use App\Http\Controllers\Operasional\CustomerController;
 use App\Http\Controllers\Operasional\MaterialInventoryController;
 use App\Http\Controllers\Operasional\MaterialPurchaseController;
@@ -31,6 +32,10 @@ Route::middleware(['auth'])->group(function () {
     Route::get('/dashboard', [DashboardController::class, 'index'])
         ->middleware('can:dashboard.view')
         ->name('dashboard');
+
+    Route::get('/my-account', [MyAccountController::class, 'edit'])->name('my-account.edit');
+    Route::put('/my-account/profile', [MyAccountController::class, 'updateProfile'])->name('my-account.profile');
+    Route::put('/my-account/password', [MyAccountController::class, 'updatePassword'])->name('my-account.password');
 
     Route::middleware('can:notifications.view')->group(function () {
         Route::get('/notifikasi', [NotificationController::class, 'index'])->name('notifications.index');
@@ -207,6 +212,7 @@ Route::middleware(['auth'])->group(function () {
         Route::put('/keuangan/pembelian-aset/{asset_purchase}', [AssetPurchaseController::class, 'update'])->middleware('can:asset-purchases.edit')->name('asset-purchases.update');
         Route::post('/keuangan/pembelian-aset/{asset_purchase}/approve', [AssetPurchaseController::class, 'approve'])->middleware('can:asset-purchases.approve')->name('asset-purchases.approve');
         Route::post('/keuangan/pembelian-aset/{asset_purchase}/reject', [AssetPurchaseController::class, 'reject'])->middleware('can:asset-purchases.approve')->name('asset-purchases.reject');
+        Route::post('/keuangan/pembelian-aset/{asset_purchase}/condition', [AssetPurchaseController::class, 'updateCondition'])->middleware('can:asset-purchases.edit')->name('asset-purchases.condition');
         Route::delete('/keuangan/pembelian-aset/{asset_purchase}', [AssetPurchaseController::class, 'destroy'])->middleware('can:asset-purchases.delete')->name('asset-purchases.destroy');
         Route::get('/keuangan/pembelian-aset/{asset_purchase}', [AssetPurchaseController::class, 'show'])->name('asset-purchases.show');
     });

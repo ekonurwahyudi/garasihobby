@@ -505,9 +505,6 @@ class MaterialPurchaseController extends Controller
 
         $amount = (float) $items->sum('total_price');
         $bank = BankAccount::lockForUpdate()->findOrFail($bankAccountId);
-        if ((float) $bank->balance < $amount) {
-            throw ValidationException::withMessages(['bank_account_id' => 'Saldo bank tidak mencukupi untuk pembelian material ini.']);
-        }
 
         $first = $items->first();
         $item = $this->financeItem('AUTO-MATERIAL', 'Pembelian Material', 'Pembelian material operasional');

@@ -242,12 +242,151 @@
             box-shadow: 0 12px 28px rgba(15, 23, 42, 0.05);
             position: relative;
         }
+        .app-content .order-stat-card {
+            border: 1px solid #e4e8f0;
+            border-radius: 14px;
+            background: #fff;
+            padding: 20px;
+            min-height: 132px;
+            box-shadow: 0 12px 30px rgba(15, 23, 42, .05);
+            display: flex;
+            align-items: flex-start;
+            gap: 16px;
+            transition: transform .15s ease, box-shadow .15s ease;
+        }
+        .app-content .order-stat-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 16px 34px rgba(15, 23, 42, .08);
+        }
+        .app-content .order-stat-icon {
+            width: 42px;
+            height: 42px;
+            border-radius: 11px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            flex: 0 0 42px;
+        }
+        .app-content .order-stat-icon i {
+            color: currentColor !important;
+        }
+        .app-content .order-stat-label {
+            color: #64748b;
+            font-size: 12px;
+            font-weight: 650;
+            text-transform: uppercase;
+        }
+        .app-content .order-stat-value {
+            color: #061535;
+            font-size: 23px;
+            font-weight: 750;
+            line-height: 1.2;
+            margin-top: 8px;
+            overflow-wrap: anywhere;
+        }
+        .app-content .order-stat-currency {
+            font-size: 21px;
+        }
+        .app-content .order-stat-hint {
+            color: #8a96a8;
+            font-size: 12px;
+            font-weight: 500;
+            margin-top: 8px;
+        }
+        .app-content .order-stat-info .order-stat-icon { background: #e7f9ff; color: #00a3c7; }
+        .app-content .order-stat-primary .order-stat-icon { background: #e8f3ff; color: #1682ff; }
+        .app-content .order-stat-warning .order-stat-icon { background: #fff3d8; color: #ff9f0a; }
+        .app-content .order-stat-success .order-stat-icon,
+        .app-content .order-stat-revenue .order-stat-icon { background: #e7f8ef; color: #12a150; }
+        .app-content .order-stat-danger .order-stat-icon { background: #ffecef; color: #f1416c; }
         .app-content .finance-summary-income { background: linear-gradient(135deg,#ecfdf3,#ffffff); }
-        .app-content .finance-summary-expense { background: linear-gradient(135deg,#fff1f2,#ffffff); }
-        .app-content .finance-summary-net { background: linear-gradient(135deg,#eff6ff,#ffffff); }
-        .app-content table .btn.btn-icon.btn-sm {
-            width: 36px;
-            height: 36px;
+         .app-content .finance-summary-expense { background: linear-gradient(135deg,#fff1f2,#ffffff); }
+         .app-content .finance-summary-net { background: linear-gradient(135deg,#eff6ff,#ffffff); }
+         .app-content .order-stat-card {
+             position: relative;
+             overflow: hidden;
+             border: 1px solid #e4e8f0;
+             border-radius: 18px;
+             background: #fff;
+             padding: 20px;
+             min-height: 142px;
+             box-shadow: 0 12px 28px rgba(15, 23, 42, .05);
+             transition: transform .15s ease, box-shadow .15s ease;
+         }
+         .app-content .order-stat-card::after {
+             content: "";
+             position: absolute;
+             width: 118px;
+             height: 118px;
+             right: -48px;
+             top: -48px;
+             border-radius: 50%;
+             background: rgba(255,255,255,.72);
+         }
+         .app-content .order-stat-card:hover {
+             transform: translateY(-2px);
+             box-shadow: 0 16px 34px rgba(15, 23, 42, .08);
+         }
+         .app-content .order-stat-top {
+             position: relative;
+             z-index: 1;
+             display: flex;
+             align-items: center;
+             justify-content: space-between;
+             gap: 12px;
+             margin-bottom: 18px;
+         }
+         .app-content .order-stat-icon {
+             width: 44px;
+             height: 44px;
+             border-radius: 14px;
+             display: inline-flex;
+             align-items: center;
+             justify-content: center;
+             background: rgba(255,255,255,.86);
+         }
+         .app-content .order-stat-hint {
+             color: #64748b;
+             font-size: 11px;
+             font-weight: 700;
+             text-transform: uppercase;
+             text-align: right;
+         }
+         .app-content .order-stat-value {
+             position: relative;
+             z-index: 1;
+             color: #0f172a;
+             font-size: 30px;
+             font-weight: 800;
+             line-height: 1;
+         }
+         .app-content .order-stat-currency {
+             font-size: 20px;
+             line-height: 1.2;
+         }
+         .app-content .order-stat-label {
+             position: relative;
+             z-index: 1;
+             color: #64748b;
+             font-size: 13px;
+             font-weight: 700;
+             margin-top: 8px;
+         }
+         .app-content .order-stat-info { background: linear-gradient(135deg,#eff6ff 0%,#fff 70%); }
+         .app-content .order-stat-primary { background: linear-gradient(135deg,#eef4ff 0%,#fff 70%); }
+         .app-content .order-stat-warning { background: linear-gradient(135deg,#fff8e6 0%,#fff 70%); }
+         .app-content .order-stat-success,
+         .app-content .order-stat-revenue { background: linear-gradient(135deg,#ecfdf3 0%,#fff 70%); }
+         .app-content .order-stat-danger { background: linear-gradient(135deg,#fff1f2 0%,#fff 70%); }
+         .app-content .order-stat-info .order-stat-icon { color: #0ea5e9; }
+         .app-content .order-stat-primary .order-stat-icon { color: #1b84ff; }
+         .app-content .order-stat-warning .order-stat-icon { color: #f59e0b; }
+         .app-content .order-stat-success .order-stat-icon,
+         .app-content .order-stat-revenue .order-stat-icon { color: #12a150; }
+         .app-content .order-stat-danger .order-stat-icon { color: #f1416c; }
+         .app-content table .btn.btn-icon.btn-sm {
+             width: 36px;
+             height: 36px;
             border-radius: 10px;
             border: 0;
             display: inline-flex;

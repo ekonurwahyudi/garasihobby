@@ -122,7 +122,7 @@
                         <!--begin:Menu link-->
                         <span class="menu-link">
                             <span class="menu-icon">
-                                <i class="ki-duotone ki-check-square fs-2">
+                                <i class="ki-duotone ki-check-circle fs-2">
                                     <span class="path1"></span>
                                     <span class="path2"></span>
                                 </i>
@@ -268,7 +268,7 @@
                         <!--begin:Menu link-->
                         <a class="menu-link {{ request()->routeIs('customers.*') ? 'active' : '' }}" href="{{ route('customers.index') }}">
                             <span class="menu-icon">
-                                <i class="ki-duotone ki-profile-user fs-2">
+                                <i class="ki-duotone ki-user-square fs-2">
                                     <span class="path1"></span>
                                     <span class="path2"></span>
                                     <span class="path3"></span>
@@ -446,11 +446,11 @@
                     data-bs-toggle="tooltip"
                     data-bs-trigger="hover"
                     title="Keluar dari sistem">
-                <span class="btn-label">Keluar</span>
-                <i class="ki-duotone ki-exit-right btn-icon fs-2 m-0">
+                <i class="ki-duotone ki-exit-right fs-2 me-2">
                     <span class="path1"></span>
                     <span class="path2"></span>
                 </i>
+                <span class="btn-label">Keluar</span>
             </button>
         </form>
     </div>
