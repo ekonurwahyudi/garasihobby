@@ -33,8 +33,18 @@
             font-weight: 700;
             text-decoration: none;
             cursor: pointer;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .btn svg {
+            width: 17px;
+            height: 17px;
+            flex: 0 0 auto;
         }
         .btn-light { color: #344054; background: #eef2f6; }
+        .btn-whatsapp { background: #16a34a; }
+        .btn-whatsapp:hover { background: #15803d; }
         .sheet {
             width: 210mm;
             min-height: 297mm;
@@ -230,6 +240,14 @@
 @php
     $checklistTotal = $order->items->sum('price');
     $materialTotal = $order->materials->sum('subtotal');
+    $customerPhone = preg_replace('/\D+/', '', $order->customer->phone ?? '');
+    if (str_starts_with($customerPhone, '0')) {
+        $customerPhone = '62' . substr($customerPhone, 1);
+    } elseif ($customerPhone && str_starts_with($customerPhone, '8')) {
+        $customerPhone = '62' . $customerPhone;
+    }
+    $invoiceUrl = $invoiceShareUrl ?? route('orders.invoice', $order);
+    $whatsappMessage = trim("Halo " . ($order->customer->name ?? 'Pelanggan') . ",\n\nBerikut invoice order " . $order->order_number . " dari Garasi Hobby.\nTotal invoice: Rp " . number_format($order->total, 0, ',', '.') . "\nKendaraan: " . trim(($order->vehicle->brand ?? '') . ' ' . ($order->vehicle->model ?? '') . ' ' . ($order->vehicle->year ?? '')) . "\nPlat: " . ($order->vehicle->plate_number ?? '-') . "\n\nLink invoice/PDF:\n" . $invoiceUrl . "\n\nTerima kasih.");
     $vehicleSizeMap = [
         'small' => 'S - City Car / Hatchback / Sedan Kecil',
         'medium' => 'M - MPV / SUV Medium / Pickup Ringan',
@@ -238,14 +256,30 @@
 @endphp
 
 <div class="toolbar">
+    @empty($isPublicInvoice)
     <a href="{{ route('orders.show', $order) }}" class="btn btn-light">Kembali</a>
-    <button type="button" class="btn" onclick="window.print()">Download PDF</button>
+    @endempty
+    <button type="button" class="btn btn-whatsapp" onclick="sendInvoiceWhatsapp()">
+        <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
+            <path d="M7.8 19.2 4 20l.8-3.7A8.1 8.1 0 1 1 7.8 19.2Z" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/>
+            <path d="M8.8 8.7c.2-.5.4-.6.8-.6h.5c.2 0 .4.1.5.4l.8 1.8c.1.3.1.5-.1.7l-.5.6c.7 1.2 1.6 2.1 2.9 2.8l.7-.6c.2-.2.4-.2.7-.1l1.7.8c.3.1.4.3.4.6v.4c0 .5-.2.8-.7 1a4 4 0 0 1-2 .3c-2.9-.4-6.1-3.3-6.8-6.1a3.4 3.4 0 0 1 .1-2Z" fill="currentColor"/>
+        </svg>
+        Kirim WhatsApp
+    </button>
+    <button type="button" class="btn" onclick="window.print()">
+        <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
+            <path d="M7 8V4h10v4M7 17H5a2 2 0 0 1-2-2v-4a3 3 0 0 1 3-3h12a3 3 0 0 1 3 3v4a2 2 0 0 1-2 2h-2" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
+            <path d="M7 14h10v6H7v-6Z" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/>
+            <path d="M17.5 11.5h.01" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"/>
+        </svg>
+        Print / PDF
+    </button>
 </div>
 
 <main class="sheet">
     <div class="header">
         <div class="brand">
-            <img src="{{ asset('assets/media/logos.png') }}" alt="Garasi Hobby">
+            <img src="{{ asset('assets/media/favicon.png') }}" alt="Garasi Hobby">
             <div>
                 <div class="brand-title">GARASI HOBBY</div>
                 <div class="brand-subtitle">Bengkel Mobil</div>
@@ -379,5 +413,18 @@
         <div><div>CS / Kasir</div><div class="signature-line"></div><div>{{ $order->creator->name ?? '' }}</div></div>
     </div>
 </main>
+<script>
+    function sendInvoiceWhatsapp() {
+        var phone = @js($customerPhone);
+        var message = @js($whatsappMessage);
+
+        if (!phone) {
+            alert('Nomor WhatsApp pelanggan belum tersedia.');
+            return;
+        }
+
+        window.open('https://wa.me/' + phone + '?text=' + encodeURIComponent(message), '_blank');
+    }
+</script>
 </body>
 </html>

@@ -29,6 +29,8 @@ Route::get('/', function () {
     return redirect()->route('dashboard');
 });
 
+Route::get('/invoice/order/{token}', [OrderController::class, 'publicInvoice'])->name('orders.invoice.share');
+
 Route::middleware(['auth'])->group(function () {
     Route::get('/dashboard', [DashboardController::class, 'index'])
         ->middleware('can:dashboard.view')

@@ -298,6 +298,91 @@
         font-weight: 600;
         letter-spacing: .02em;
     }
+    .finance-stat-grid .order-stat-card {
+        border: 1px solid #e4e8f0;
+        border-radius: 16px;
+        padding: 18px;
+        display: grid;
+        grid-template-columns: 46px minmax(0, 1fr);
+        align-items: center;
+        column-gap: 14px;
+        min-height: 112px;
+        box-shadow: 0 12px 28px rgba(15, 23, 42, .045);
+        position: relative;
+        overflow: hidden;
+    }
+    .finance-stat-grid .order-stat-card::after {
+        content: "";
+        position: absolute;
+        width: 96px;
+        height: 96px;
+        right: -36px;
+        top: -36px;
+        border-radius: 50%;
+        background: rgba(255,255,255,.65);
+    }
+    .finance-stat-grid .order-stat-icon {
+        width: 46px;
+        height: 46px;
+        border-radius: 14px;
+        background: #fff;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        position: relative;
+        z-index: 1;
+        box-shadow: 0 8px 18px rgba(15, 23, 42, .06);
+    }
+    .finance-stat-grid .order-stat-card > .min-w-0 {
+        position: relative;
+        z-index: 1;
+    }
+    .finance-stat-grid .order-stat-label {
+        font-size: 11px;
+        line-height: 1.2;
+        text-transform: uppercase;
+        letter-spacing: .03em;
+        font-weight: 800;
+        color: #64748b;
+        margin-bottom: 5px;
+    }
+    .finance-stat-grid .order-stat-value {
+        font-size: 18px;
+        line-height: 1.25;
+        font-weight: 800;
+        color: #111827;
+        overflow-wrap: anywhere;
+    }
+    .finance-stat-grid .order-stat-currency {
+        font-size: 17px;
+    }
+    .finance-stat-grid .order-stat-hint {
+        font-size: 12px;
+        color: #7e8299;
+        margin-top: 4px;
+    }
+    .finance-stat-grid .order-stat-info {
+        background: linear-gradient(135deg, #f0f9ff, #fff);
+    }
+    .finance-stat-grid .order-stat-info .order-stat-icon {
+        color: #0284c7;
+    }
+    @media (max-width: 575.98px) {
+        .finance-stat-grid .order-stat-card {
+            grid-template-columns: 42px minmax(0, 1fr);
+            column-gap: 12px;
+            min-height: 100px;
+            padding: 16px;
+        }
+        .finance-stat-grid .order-stat-icon {
+            width: 42px;
+            height: 42px;
+        }
+        .finance-stat-grid .order-stat-value,
+        .finance-stat-grid .order-stat-currency {
+            font-size: 15px;
+        }
+    }
 </style>
 @endpush
 
@@ -308,6 +393,7 @@
     $totalIncome = $approvedData->where('transaction_type', 'income')->sum('amount');
     $totalExpense = $approvedData->where('transaction_type', 'expense')->sum('amount');
     $pendingCount = $data->where('status', 'menunggu_approval')->count();
+    $totalTransactions = $data->count();
     $categoryOptions = $data->map(function ($transaction) {
         $activity = $transaction->activity ?: $transaction->description;
         $isOrderPayment = ($transaction->item?->code === 'AUTO-ORDER') || \Illuminate\Support\Str::startsWith($activity, 'Pembayaran Order');
@@ -317,7 +403,17 @@
     $sampleExpenseItem = $importItems->first(fn ($item) => $item->category?->type === 'expense') ?: $importItems->first();
     $sampleBankAccount = $importBankAccounts->first();
 @endphp
-<div class="row row-cols-1 row-cols-sm-2 row-cols-xl-3 g-5 mb-7">
+<div class="row row-cols-1 row-cols-sm-2 row-cols-xl-4 g-5 mb-7 finance-stat-grid">
+    <div class="col">
+        <div class="order-stat-card order-stat-info h-100">
+            <span class="order-stat-icon"><i class="ki-duotone ki-document fs-2"><span class="path1"></span><span class="path2"></span></i></span>
+            <div class="min-w-0">
+                <div class="order-stat-label">Total Transaksi</div>
+                <div class="order-stat-value">{{ number_format($totalTransactions,0,',','.') }}</div>
+                <div class="order-stat-hint">{{ $pendingCount }} awaiting</div>
+            </div>
+        </div>
+    </div>
     <div class="col">
         <div class="order-stat-card order-stat-success h-100">
             <span class="order-stat-icon"><i class="ki-duotone ki-arrow-up fs-2"><span class="path1"></span><span class="path2"></span></i></span>

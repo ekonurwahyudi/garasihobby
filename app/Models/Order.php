@@ -13,7 +13,7 @@ class Order extends Model
     use HasFactory, SoftDeletes;
 
     protected $fillable = [
-        'order_number', 'order_date', 'customer_id', 'vehicle_id',
+        'order_number', 'invoice_token', 'order_date', 'customer_id', 'vehicle_id',
         'complaint', 'mileage', 'km_service', 'km_return',
         'head_mechanic', 'mechanic', 'mechanic_number',
         'subtotal', 'discount', 'other_service_price', 'total', 'status', 'created_by', 'paid_at',

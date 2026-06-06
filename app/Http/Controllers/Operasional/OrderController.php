@@ -149,6 +149,7 @@ class OrderController extends Controller
 
             $order = Order::create([
                 'order_number' => $this->generateOrderNumber(),
+                'invoice_token' => $this->generateInvoiceToken(),
                 'order_date' => $request->order_date,
                 'customer_id' => $customerId,
                 'vehicle_id' => $vehicleId,
@@ -290,7 +291,25 @@ class OrderController extends Controller
         abort_unless($order->status === 'selesai', 404);
 
         $order->load(['customer', 'vehicle', 'items.checklistItem.category', 'materials', 'creator']);
-        return view('operasional.orders.invoice', compact('order'));
+        return view('operasional.orders.invoice', [
+            'order' => $order,
+            'invoiceShareUrl' => route('orders.invoice.share', $this->invoiceShareToken($order)),
+            'isPublicInvoice' => false,
+        ]);
+    }
+
+    public function publicInvoice(string $token): View
+    {
+        $order = Order::where('invoice_token', strtoupper($token))->firstOrFail();
+
+        abort_unless($order->status === 'selesai', 404);
+
+        $order->load(['customer', 'vehicle', 'items.checklistItem.category', 'materials', 'creator']);
+        return view('operasional.orders.invoice', [
+            'order' => $order,
+            'invoiceShareUrl' => route('orders.invoice.share', $this->invoiceShareToken($order)),
+            'isPublicInvoice' => true,
+        ]);
     }
 
     public function destroy(Order $order): JsonResponse
@@ -458,6 +477,24 @@ class OrderController extends Controller
         $nextNumber = $lastNumber ? ((int) Str::afterLast($lastNumber, '-') + 1) : 1;
 
         return $prefix . str_pad((string) $nextNumber, 5, '0', STR_PAD_LEFT);
+    }
+
+    private function invoiceShareToken(Order $order): string
+    {
+        if (!$order->invoice_token) {
+            $order->forceFill(['invoice_token' => $this->generateInvoiceToken()])->saveQuietly();
+        }
+
+        return $order->invoice_token;
+    }
+
+    private function generateInvoiceToken(): string
+    {
+        do {
+            $token = Str::upper(Str::random(10));
+        } while (Order::where('invoice_token', $token)->exists());
+
+        return $token;
     }
 
     private function storeOrderEvidences(Request $request, string $inputName, string $directory): array
