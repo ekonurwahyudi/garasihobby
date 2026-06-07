@@ -34,15 +34,14 @@
         ['label' => 'Total Order', 'value' => $data->count(), 'hint' => 'Semua status', 'icon' => 'ki-abstract-26', 'tone' => 'info'],
         ['label' => 'Open', 'value' => $data->where('status', 'open')->count(), 'hint' => 'Sedang berjalan', 'icon' => 'ki-notepad', 'tone' => 'primary'],
         ['label' => 'Menunggu Bayar', 'value' => $data->where('status', 'belum_bayar')->count(), 'hint' => 'Perlu pembayaran', 'icon' => 'ki-time', 'tone' => 'warning'],
-        ['label' => 'Selesai', 'value' => $data->where('status', 'selesai')->count(), 'hint' => 'Order closed', 'icon' => 'ki-check-circle', 'tone' => 'success'],
     ];
     $revenue = $data->where('status', 'selesai')->sum('total');
 @endphp
 
-<div class="row row-cols-1 row-cols-sm-2 row-cols-lg-3 row-cols-xl-5 g-5 mb-7">
+<div class="order-stat-grid mb-7">
     @foreach($orderStats as $stat)
-    <div class="col">
-        <div class="order-stat-card order-stat-{{ $stat['tone'] }} h-100">
+    <div>
+        <div class="order-stat-card order-stat-{{ $stat['tone'] }}">
             <span class="order-stat-icon"><i class="ki-duotone {{ $stat['icon'] }} fs-2"><span class="path1"></span><span class="path2"></span><span class="path3"></span></i></span>
             <div class="min-w-0">
                 <div class="order-stat-label">{{ $stat['label'] }}</div>
@@ -52,8 +51,8 @@
         </div>
     </div>
     @endforeach
-    <div class="col">
-        <div class="order-stat-card order-stat-revenue h-100">
+    <div class="order-stat-revenue-col">
+        <div class="order-stat-card order-stat-revenue">
             <span class="order-stat-icon"><i class="ki-duotone ki-dollar fs-2"><span class="path1"></span><span class="path2"></span><span class="path3"></span></i></span>
             <div class="min-w-0">
                 <div class="order-stat-label">Revenue</div>
@@ -167,14 +166,15 @@
 <style>
 .order-stat-card {
     border: 1px solid #e4e8f0;
-    border-radius: 14px;
+    border-radius: 12px;
     background: #fff;
-    padding: 20px;
-    min-height: 132px;
+    padding: 18px;
+    min-height: 118px;
     box-shadow: 0 12px 30px rgba(15, 23, 42, .05);
     display: flex;
     align-items: flex-start;
-    gap: 16px;
+    gap: 14px;
+    height: 100%;
     transition: transform .15s ease, box-shadow .15s ease;
 }
 .order-stat-card:hover {
@@ -182,13 +182,13 @@
     box-shadow: 0 16px 34px rgba(15, 23, 42, .08);
 }
 .order-stat-icon {
-    width: 42px;
-    height: 42px;
-    border-radius: 11px;
+    width: 40px;
+    height: 40px;
+    border-radius: 10px;
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    flex: 0 0 42px;
+    flex: 0 0 40px;
 }
 .order-stat-hint {
     color: #8a96a8;
@@ -198,15 +198,17 @@
 }
 .order-stat-value {
     color: #061535;
-    font-size: 23px;
+    font-size: 22px;
     font-weight: 750;
     line-height: 1.2;
     margin-top: 8px;
     overflow-wrap: anywhere;
 }
 .order-stat-currency {
-    font-size: 21px;
+    font-size: clamp(18px, 1.35vw, 22px);
     line-height: 1.2;
+    white-space: nowrap;
+    overflow-wrap: normal;
 }
 .order-stat-label {
     color: #64748b;
@@ -250,6 +252,31 @@
 }
 .order-table {
     margin-bottom: 0 !important;
+}
+.order-stat-grid {
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 18px;
+    align-items: stretch;
+}
+@media (max-width: 1199.98px) {
+    .order-stat-grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+    .order-stat-revenue-col {
+        grid-column: span 2;
+    }
+}
+@media (max-width: 575.98px) {
+    .order-stat-grid {
+        grid-template-columns: 1fr;
+    }
+    .order-stat-revenue-col {
+        grid-column: auto;
+    }
+    .order-stat-card {
+        min-height: 108px;
+    }
 }
 </style>
 @endpush
