@@ -83,7 +83,7 @@
                     @endcan
 
                     {{-- ====== SECTION: OPERASIONAL ====== --}}
-                    @canany(['customers.view', 'orders.create', 'orders.view', 'purchases.view', 'purchases.create', 'purchases.approve', 'materials.view'])
+                    @canany(['customers.view', 'orders.create','promo.view','orders.view', 'purchases.view', 'purchases.create', 'purchases.approve', 'materials.view'])
                     <!--begin:Menu item-->
                     <div class="menu-item pt-5">
                         <!--begin:Menu content-->
@@ -161,6 +161,24 @@
                                 </i>
                             </span>
                             <span class="menu-title">Persediaan Material</span>
+                        </a>
+                        <!--end:Menu link-->
+                    </div>
+                    <!--end:Menu item-->
+                    @endcan
+
+                      @can('promo.view')
+                    <!--begin:Menu item-->
+                    <div class="menu-item">
+                        <!--begin:Menu link-->
+                        <a class="menu-link {{ request()->routeIs('promo-packages.*') ? 'active' : '' }}" href="{{ route('promo-packages.index') }}">
+                            <span class="menu-icon">
+                                <i class="ki-duotone ki-discount fs-2">
+                                    <span class="path1"></span>
+                                    <span class="path2"></span>
+                                </i>
+                            </span>
+                            <span class="menu-title">Paket Promo</span>
                         </a>
                         <!--end:Menu link-->
                     </div>
@@ -333,23 +351,7 @@
                     <!--end:Menu item-->
                     @endcan
 
-                    @can('promo.view')
-                    <!--begin:Menu item-->
-                    <div class="menu-item">
-                        <!--begin:Menu link-->
-                        <a class="menu-link {{ request()->routeIs('promo-packages.*') ? 'active' : '' }}" href="{{ route('promo-packages.index') }}">
-                            <span class="menu-icon">
-                                <i class="ki-duotone ki-discount fs-2">
-                                    <span class="path1"></span>
-                                    <span class="path2"></span>
-                                </i>
-                            </span>
-                            <span class="menu-title">Paket Promo</span>
-                        </a>
-                        <!--end:Menu link-->
-                    </div>
-                    <!--end:Menu item-->
-                    @endcan
+                  
 
                     @can('finance-master.view')
                     <div data-kt-menu-trigger="click" class="menu-item menu-accordion {{ request()->routeIs('finance-categories.*', 'finance-items.*', 'asset-categories.*', 'debt-receivable-categories.*') ? 'here show' : '' }}">

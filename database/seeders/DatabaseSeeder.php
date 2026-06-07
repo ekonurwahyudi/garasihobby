@@ -14,6 +14,7 @@ class DatabaseSeeder extends Seeder
             ChecklistCategorySeeder::class,
             ChecklistItemSeeder::class,
             MaterialCategorySeeder::class,
+            PromoPackageSeeder::class,
             AssetCategorySeeder::class,
             DebtReceivableCategorySeeder::class,
             FinanceCategoryItemSeeder::class,

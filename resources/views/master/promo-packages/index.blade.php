@@ -48,8 +48,9 @@
                 <tr class="fw-semibold fs-6 text-gray-800">
                     <th class="w-50px">No</th>
                     <th>Nama Paket</th>
-                    <th>Harga Promo</th>
-                    <th>Jumlah Item</th>
+                    <th>Small (S)</th>
+                    <th>Medium (M)</th>
+                    <th>Large (L)</th>
                     <th>Berlaku</th>
                     <th>Status</th>
                     <th class="text-end min-w-100px">Aksi</th>
@@ -60,8 +61,9 @@
                 <tr>
                     <td>{{ $i + 1 }}</td>
                     <td>{{ $item->name }}</td>
-                    <td>Rp {{ number_format($item->price, 0, ',', '.') }}</td>
-                    <td>{{ $item->checklist_items_count ?? 0 }}</td>
+                    <td>Rp {{ number_format($item->price_small ?: $item->price, 0, ',', '.') }}</td>
+                    <td>Rp {{ number_format($item->price_medium ?: $item->price, 0, ',', '.') }}</td>
+                    <td>Rp {{ number_format($item->price_large ?: $item->price, 0, ',', '.') }}</td>
                     <td>
                         @if($item->valid_from && $item->valid_until)
                             {{ \Carbon\Carbon::parse($item->valid_from)->format('d/m/Y') }} - {{ \Carbon\Carbon::parse($item->valid_until)->format('d/m/Y') }}
@@ -119,29 +121,46 @@
                             <input type="text" name="name" id="f_name" class="form-control form-control" required />
                         </div>
                         <div class="col-md-6 fv-row">
-                            <label class="required form-label fw-semibold">Harga Promo</label>
-                            <!--begin::Input group-->
-                            <div class="input-group mb-5">
-                                <span class="input-group-text" id="price-addon">Rp</span>
-                                <input type="text" id="f_price_display" class="form-control" placeholder="0" aria-label="Harga Promo" aria-describedby="price-addon" inputmode="numeric" autocomplete="off" required />
+                            <label class="form-label fw-semibold">Berlaku Range Tanggal</label>
+                            <div class="row g-3">
+                                <div class="col-6">
+                                    <input type="date" name="valid_from" id="f_valid_from" class="form-control form-control" />
+                                </div>
+                                <div class="col-6">
+                                    <input type="date" name="valid_until" id="f_valid_until" class="form-control form-control" />
+                                </div>
                             </div>
-                            <!--end::Input group-->
-                            <input type="hidden" name="price" id="f_price" />
+                        </div>
+                    </div>
+                    <div class="row mb-5">
+                        <div class="col-md-4 fv-row">
+                            <label class="required form-label fw-semibold">Harga Small (S)</label>
+                            <div class="input-group">
+                                <span class="input-group-text">Rp</span>
+                                <input type="text" id="f_price_small_display" class="form-control price-display" data-target="f_price_small" placeholder="0" inputmode="numeric" autocomplete="off" required />
+                            </div>
+                            <input type="hidden" name="price_small" id="f_price_small" />
+                        </div>
+                        <div class="col-md-4 fv-row">
+                            <label class="required form-label fw-semibold">Harga Medium (M)</label>
+                            <div class="input-group">
+                                <span class="input-group-text">Rp</span>
+                                <input type="text" id="f_price_medium_display" class="form-control price-display" data-target="f_price_medium" placeholder="0" inputmode="numeric" autocomplete="off" required />
+                            </div>
+                            <input type="hidden" name="price_medium" id="f_price_medium" />
+                        </div>
+                        <div class="col-md-4 fv-row">
+                            <label class="required form-label fw-semibold">Harga Large (L)</label>
+                            <div class="input-group">
+                                <span class="input-group-text">Rp</span>
+                                <input type="text" id="f_price_large_display" class="form-control price-display" data-target="f_price_large" placeholder="0" inputmode="numeric" autocomplete="off" required />
+                            </div>
+                            <input type="hidden" name="price_large" id="f_price_large" />
                         </div>
                     </div>
                     <div class="fv-row mb-5">
                         <label class="form-label fw-semibold">Deskripsi</label>
                         <textarea name="description" id="f_description" class="form-control form-control" rows="3"></textarea>
-                    </div>
-                    <div class="row mb-5">
-                        <div class="col-md-6 fv-row">
-                            <label class="form-label fw-semibold">Berlaku Dari</label>
-                            <input type="date" name="valid_from" id="f_valid_from" class="form-control form-control" />
-                        </div>
-                        <div class="col-md-6 fv-row">
-                            <label class="form-label fw-semibold">Berlaku Sampai</label>
-                            <input type="date" name="valid_until" id="f_valid_until" class="form-control form-control" />
-                        </div>
                     </div>
                     <div class="fv-row mb-5 d-none" id="statusWrapper">
                         <label class="form-label fw-semibold">Status</label>
@@ -149,24 +168,6 @@
                             <option value="1">Aktif</option>
                             <option value="0">Nonaktif</option>
                         </select>
-                    </div>
-                    <div class="fv-row mb-5">
-                        <label class="form-label fw-semibold">Item Checklist</label>
-                        <div class="border rounded p-4" style="max-height: 250px; overflow-y: auto;">
-                            @foreach($checklistItems as $categoryName => $items)
-                            <div class="mb-4">
-                                <h6 class="fw-bold text-gray-800 mb-2">{{ $categoryName }}</h6>
-                                @foreach($items as $checkItem)
-                                <div class="form-check form-check-custom form-check-solid mb-2 ms-3">
-                                    <input class="form-check-input" type="checkbox" name="checklist_items[]" value="{{ $checkItem->id }}" id="chk_{{ $checkItem->id }}" />
-                                    <label class="form-check-label fw-semibold text-gray-700" for="chk_{{ $checkItem->id }}">
-                                        {{ $checkItem->name }} <span class="text-muted fs-7">(Rp {{ number_format($checkItem->price, 0, ',', '.') }})</span>
-                                    </label>
-                                </div>
-                                @endforeach
-                            </div>
-                            @endforeach
-                        </div>
                     </div>
                 </div>
                 <div class="modal-footer flex-center">
@@ -193,13 +194,13 @@ $(document).ready(function() {
             {
                 extend: 'excelHtml5',
                 title: 'Paket Promo - Garasi Hobby',
-                exportOptions: { columns: [0, 1, 2, 3, 4, 5] }
+                exportOptions: { columns: [0, 1, 2, 3, 4, 5, 6] }
             }
         ],
         order: [],
         pageLength: 10,
         columnDefs: [
-            { orderable: false, targets: [0, 6] }
+            { orderable: false, targets: [0, 7] }
         ],
         language: {
             zeroRecords: "Data tidak ditemukan",
@@ -249,10 +250,29 @@ function formatRupiah(value) {
     return digits ? digits.replace(/\B(?=(\d{3})+(?!\d))/g, '.') : '';
 }
 
-function setPriceValue(value) {
+function setPriceValue(targetId, value) {
     var digits = normalizePriceInput(value);
-    document.getElementById('f_price').value = digits;
-    document.getElementById('f_price_display').value = formatRupiah(digits);
+    var target = document.getElementById(targetId);
+    var display = document.querySelector('[data-target="' + targetId + '"]');
+
+    if (target) target.value = digits;
+    if (display) display.value = formatRupiah(digits);
+}
+
+function formatDateInput(date) {
+    var month = String(date.getMonth() + 1).padStart(2, '0');
+    var day = String(date.getDate()).padStart(2, '0');
+
+    return date.getFullYear() + '-' + month + '-' + day;
+}
+
+function setDefaultDateRange() {
+    var from = new Date();
+    var until = new Date(from);
+    until.setMonth(until.getMonth() + 2);
+
+    document.getElementById('f_valid_from').value = formatDateInput(from);
+    document.getElementById('f_valid_until').value = formatDateInput(until);
 }
 
 function openCreateModal() {
@@ -260,10 +280,11 @@ function openCreateModal() {
     editId = null;
     document.getElementById('modalTitle').textContent = 'Tambah Paket';
     document.getElementById('dataForm').reset();
-    setPriceValue('');
+    setPriceValue('f_price_small', '');
+    setPriceValue('f_price_medium', '');
+    setPriceValue('f_price_large', '');
+    setDefaultDateRange();
     document.getElementById('statusWrapper').classList.add('d-none');
-    // Uncheck all checkboxes
-    document.querySelectorAll('input[name="checklist_items[]"]').forEach(el => el.checked = false);
     hideErrors();
     new bootstrap.Modal(document.getElementById('formModal')).show();
 }
@@ -280,21 +301,14 @@ function openEditModal(id) {
     .then(data => {
         document.getElementById('modalTitle').textContent = 'Edit Paket';
         document.getElementById('f_name').value = data.name || '';
-        setPriceValue(data.price || 0);
+        setPriceValue('f_price_small', data.price_small || data.price || 0);
+        setPriceValue('f_price_medium', data.price_medium || data.price || 0);
+        setPriceValue('f_price_large', data.price_large || data.price || 0);
         document.getElementById('f_description').value = data.description || '';
         document.getElementById('f_valid_from').value = data.valid_from || '';
         document.getElementById('f_valid_until').value = data.valid_until || '';
         document.getElementById('f_status').value = data.is_active ? '1' : '0';
         document.getElementById('statusWrapper').classList.remove('d-none');
-
-        // Reset & set checklist items
-        document.querySelectorAll('input[name="checklist_items[]"]').forEach(el => el.checked = false);
-        if (data.checklist_item_ids && Array.isArray(data.checklist_item_ids)) {
-            data.checklist_item_ids.forEach(function(itemId) {
-                var chk = document.getElementById('chk_' + itemId);
-                if (chk) chk.checked = true;
-            });
-        }
 
         new bootstrap.Modal(document.getElementById('formModal')).show();
     });
@@ -325,7 +339,9 @@ function deleteItem(id, name) {
 document.getElementById('dataForm').addEventListener('submit', function(e) {
     e.preventDefault();
     hideErrors();
-    setPriceValue(document.getElementById('f_price_display').value);
+    document.querySelectorAll('.price-display').forEach(function(input) {
+        setPriceValue(input.dataset.target, input.value);
+    });
 
     var url = formMode === 'create' ? '{{ route("promo-packages.store") }}' : '/master/promo-packages/' + editId;
     var method = formMode === 'create' ? 'POST' : 'PUT';
@@ -352,8 +368,10 @@ document.getElementById('dataForm').addEventListener('submit', function(e) {
     .catch(() => window.location.reload());
 });
 
-document.getElementById('f_price_display').addEventListener('input', function() {
-    setPriceValue(this.value);
+document.querySelectorAll('.price-display').forEach(function(input) {
+    input.addEventListener('input', function() {
+        setPriceValue(this.dataset.target, this.value);
+    });
 });
 </script>
 @endpush

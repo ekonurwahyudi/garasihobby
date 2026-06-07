@@ -3,7 +3,6 @@
 namespace App\Http\Controllers\Master;
 
 use App\Http\Controllers\Controller;
-use App\Models\ChecklistItem;
 use App\Models\PromoPackage;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -13,34 +12,32 @@ class PromoPackageController extends Controller
 {
     public function index(): View
     {
-        $data = PromoPackage::withCount('checklistItems')->orderBy('name')->get();
-        $checklistItems = ChecklistItem::with('category')
-            ->where('is_active', true)
-            ->orderBy('name')
-            ->get()
-            ->groupBy(fn($item) => $item->category->name ?? 'Tanpa Kategori');
+        $data = PromoPackage::orderBy('name')->get();
 
-        return view('master.promo-packages.index', compact('data', 'checklistItems'));
+        return view('master.promo-packages.index', compact('data'));
     }
 
     public function store(Request $request): JsonResponse
     {
         $request->validate([
             'name' => 'required|string|max:150',
-            'price' => 'required|numeric|min:0',
+            'price_small' => 'required|numeric|min:0',
+            'price_medium' => 'required|numeric|min:0',
+            'price_large' => 'required|numeric|min:0',
             'description' => 'nullable|string|max:1000',
             'valid_from' => 'nullable|date',
             'valid_until' => 'nullable|date|after_or_equal:valid_from',
-            'checklist_items' => 'required|array|min:1',
-            'checklist_items.*' => 'exists:checklist_items,id',
         ], [
             'name.required' => 'Nama paket wajib diisi.',
-            'price.required' => 'Harga promo wajib diisi.',
-            'checklist_items.required' => 'Minimal 1 item checklist dipilih.',
+            'price_small.required' => 'Harga Small wajib diisi.',
+            'price_medium.required' => 'Harga Medium wajib diisi.',
+            'price_large.required' => 'Harga Large wajib diisi.',
         ]);
 
-        $promo = PromoPackage::create($request->only('name', 'price', 'description', 'valid_from', 'valid_until'));
-        $promo->checklistItems()->sync($request->checklist_items);
+        PromoPackage::create([
+            ...$request->only('name', 'price_small', 'price_medium', 'price_large', 'description', 'valid_from', 'valid_until'),
+            'price' => $request->price_small,
+        ]);
 
         return response()->json(['success' => true]);
     }
@@ -51,11 +48,13 @@ class PromoPackageController extends Controller
             'id' => $promo_package->id,
             'name' => $promo_package->name,
             'price' => $promo_package->price,
+            'price_small' => $promo_package->price_small,
+            'price_medium' => $promo_package->price_medium,
+            'price_large' => $promo_package->price_large,
             'description' => $promo_package->description,
             'valid_from' => $promo_package->valid_from?->format('Y-m-d'),
             'valid_until' => $promo_package->valid_until?->format('Y-m-d'),
             'is_active' => $promo_package->is_active,
-            'checklist_item_ids' => $promo_package->checklistItems->pluck('id')->toArray(),
         ]);
     }
 
@@ -63,17 +62,19 @@ class PromoPackageController extends Controller
     {
         $request->validate([
             'name' => 'required|string|max:150',
-            'price' => 'required|numeric|min:0',
+            'price_small' => 'required|numeric|min:0',
+            'price_medium' => 'required|numeric|min:0',
+            'price_large' => 'required|numeric|min:0',
             'description' => 'nullable|string|max:1000',
             'valid_from' => 'nullable|date',
             'valid_until' => 'nullable|date|after_or_equal:valid_from',
             'is_active' => 'required|boolean',
-            'checklist_items' => 'required|array|min:1',
-            'checklist_items.*' => 'exists:checklist_items,id',
         ]);
 
-        $promo_package->update($request->only('name', 'price', 'description', 'valid_from', 'valid_until', 'is_active'));
-        $promo_package->checklistItems()->sync($request->checklist_items);
+        $promo_package->update([
+            ...$request->only('name', 'price_small', 'price_medium', 'price_large', 'description', 'valid_from', 'valid_until', 'is_active'),
+            'price' => $request->price_small,
+        ]);
 
         return response()->json(['success' => true]);
     }
