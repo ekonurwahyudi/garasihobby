@@ -16,7 +16,9 @@ class Order extends Model
         'order_number', 'invoice_token', 'order_date', 'customer_id', 'vehicle_id',
         'complaint', 'mileage', 'km_service', 'km_return',
         'head_mechanic', 'mechanic', 'mechanic_number',
-        'subtotal', 'discount', 'other_service_price', 'total', 'status', 'created_by', 'paid_at',
+        'subtotal', 'discount', 'other_service_price',
+        'promo_package_id', 'promo_package_name', 'promo_package_description', 'promo_package_price',
+        'total', 'status', 'created_by', 'paid_at',
         'bank_account_id', 'finance_transaction_id',
         'evidence_work_paths', 'evidence_payment_paths',
     ];
@@ -26,6 +28,7 @@ class Order extends Model
         'subtotal' => 'decimal:2',
         'discount' => 'decimal:2',
         'other_service_price' => 'decimal:2',
+        'promo_package_price' => 'decimal:2',
         'total' => 'decimal:2',
         'paid_at' => 'datetime',
         'evidence_work_paths' => 'array',
@@ -35,6 +38,7 @@ class Order extends Model
     public function customer(): BelongsTo { return $this->belongsTo(Customer::class); }
     public function vehicle(): BelongsTo { return $this->belongsTo(Vehicle::class); }
     public function creator(): BelongsTo { return $this->belongsTo(User::class, 'created_by'); }
+    public function promoPackage(): BelongsTo { return $this->belongsTo(PromoPackage::class); }
     public function items(): HasMany { return $this->hasMany(OrderItem::class); }
     public function materials(): HasMany { return $this->hasMany(OrderMaterial::class); }
     public function financeTransaction(): BelongsTo { return $this->belongsTo(FinanceTransaction::class); }

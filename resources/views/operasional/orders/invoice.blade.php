@@ -240,6 +240,8 @@
 @php
     $checklistTotal = $order->items->sum('price');
     $materialTotal = $order->materials->sum('subtotal');
+    $promoDescription = $order->promo_package_description ?: $order->promoPackage?->description;
+    $hasPromoPackage = $order->promo_package_name || (float) ($order->promo_package_price ?? 0) > 0;
     $customerPhone = preg_replace('/\D+/', '', $order->customer->phone ?? '');
     if (str_starts_with($customerPhone, '0')) {
         $customerPhone = '62' . substr($customerPhone, 1);
@@ -361,6 +363,28 @@
     </section>
     @endif
 
+    @if($hasPromoPackage)
+    <section class="section">
+        <div class="section-title">Paket Promo</div>
+        <table class="items-table">
+            <thead>
+                <tr>
+                    <th style="width: 180px;">Nama Paket</th>
+                    <th>Deskripsi</th>
+                    <th style="width: 130px;" class="text-end">Harga</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td>{{ $order->promo_package_name ?? '-' }}</td>
+                    <td>{{ $promoDescription ?: '-' }}</td>
+                    <td class="text-end">Rp {{ number_format($order->promo_package_price ?? 0, 0, ',', '.') }}</td>
+                </tr>
+            </tbody>
+        </table>
+    </section>
+    @endif
+
     @if($order->materials->count())
     <section class="section">
         <div class="section-title">Material</div>
@@ -392,6 +416,7 @@
             <tr><td>Subtotal Checklist</td><td>Rp {{ number_format($checklistTotal, 0, ',', '.') }}</td></tr>
             <tr><td>Subtotal Material</td><td>Rp {{ number_format($materialTotal, 0, ',', '.') }}</td></tr>
             <tr><td>Jasa Lainnya</td><td>Rp {{ number_format($order->other_service_price ?? 0, 0, ',', '.') }}</td></tr>
+            <tr><td>Paket Promo{{ $order->promo_package_name ? ' - ' . $order->promo_package_name : '' }}</td><td>Rp {{ number_format($order->promo_package_price ?? 0, 0, ',', '.') }}</td></tr>
             <tr><td>Subtotal Semua</td><td>Rp {{ number_format($order->subtotal, 0, ',', '.') }}</td></tr>
             <tr><td>Diskon</td><td>Rp {{ number_format($order->discount, 0, ',', '.') }}</td></tr>
             <tr class="grand"><td>Total</td><td>Rp {{ number_format($order->total, 0, ',', '.') }}</td></tr>

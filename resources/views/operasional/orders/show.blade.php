@@ -44,6 +44,8 @@
     $status = $statusMap[$order->status] ?? ['label' => ucfirst($order->status), 'class' => 'badge-light'];
     $checklistTotal = $order->items->sum('price');
     $materialTotal = $order->materials->sum('subtotal');
+    $promoDescription = $order->promo_package_description ?: $order->promoPackage?->description;
+    $hasPromoPackage = $order->promo_package_name || (float) ($order->promo_package_price ?? 0) > 0;
     $evidenceGroups = [
         'Eviden Checklist / Pekerjaan' => collect($order->evidence_work_paths ?? []),
         'Eviden Pembayaran' => collect($order->evidence_payment_paths ?? []),
@@ -175,6 +177,33 @@
 </div>
 @endif
 
+{{-- Paket Promo --}}
+@if($hasPromoPackage)
+<div class="card card-flush mb-7">
+    <div class="card-header pt-5">
+        <h3 class="card-title fw-bold">Paket Promo</h3>
+    </div>
+    <div class="card-body pt-0">
+        <table class="table table-bordered gy-4 gs-4">
+            <thead>
+                <tr class="fw-semibold fs-7 text-gray-800 bg-light">
+                    <th class="w-220px">Nama Paket</th>
+                    <th>Deskripsi</th>
+                    <th class="text-end w-180px">Harga</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td class="fw-semibold">{{ $order->promo_package_name ?? '-' }}</td>
+                    <td>{{ $promoDescription ?: '-' }}</td>
+                    <td class="text-end">Rp {{ number_format($order->promo_package_price ?? 0, 0, ',', '.') }}</td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+</div>
+@endif
+
 {{-- Material --}}
 @if($order->materials->count() > 0)
 <div class="card card-flush mb-7">
@@ -250,6 +279,10 @@
                     <div class="total-row">
                         <span>Jasa Lainnya</span>
                         <strong>Rp {{ number_format($order->other_service_price ?? 0, 0, ',', '.') }}</strong>
+                    </div>
+                    <div class="total-row">
+                        <span>Paket Promo{{ $order->promo_package_name ? ' - ' . $order->promo_package_name : '' }}</span>
+                        <strong>Rp {{ number_format($order->promo_package_price ?? 0, 0, ',', '.') }}</strong>
                     </div>
                     <div class="total-row">
                         <span>Subtotal Semua</span>

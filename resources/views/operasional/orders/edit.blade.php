@@ -302,12 +302,58 @@
     {{-- Section Item Checklist --}}
     <div class="card card-flush mb-7" id="itemChecklistCard">
         <div class="card-header pt-5">
-            <h3 class="card-title fw-bold">Item Pengecekan</h3>
-            <div class="card-toolbar">
-                <span class="fw-bold fs-6 text-primary" id="checklistSubtotalDisplay">Subtotal: Rp 0</span>
+            <div>
+                <h3 class="card-title fw-bold mb-1">Item Pengecekan</h3>
+                <div class="text-muted fs-7">Paket promo dan harga checklist mengikuti ukuran mobil yang dipilih.</div>
             </div>
         </div>
         <div class="card-body pt-0">
+            <div class="promo-package-panel mb-5">
+                <div class="row g-4 align-items-stretch">
+                    <div class="col-lg-4 fv-row">
+                        <label class="form-label fw-semibold">Paket Promo <span class="text-muted fw-normal">(Opsional)</span></label>
+                        <select name="promo_package_id" id="promo_package_id" class="form-select" data-placeholder="Pilih paket promo">
+                            <option value="">-- Tanpa Paket Promo --</option>
+                            @foreach($promoPackages as $promo)
+                                <option value="{{ $promo->id }}"
+                                    data-price-small="{{ (int) ($promo->price_small ?: $promo->price) }}"
+                                    data-price-medium="{{ (int) ($promo->price_medium ?: $promo->price) }}"
+                                    data-price-large="{{ (int) ($promo->price_large ?: $promo->price) }}"
+                                    @selected((string) $order->promo_package_id === (string) $promo->id)>
+                                    {{ $promo->name }}
+                                </option>
+                            @endforeach
+                        </select>
+                        <input type="hidden" name="promo_package_price" id="promo_package_price" value="{{ (int) ($order->promo_package_price ?? 0) }}" />
+                        <div class="text-muted fs-8 mt-2" id="promoPackageHint">Pilih paket untuk melihat harga S/M/L.</div>
+                    </div>
+                    <div class="col-lg-8">
+                        <div class="promo-size-grid">
+                            <div class="promo-size-card" data-size="small">
+                                <div class="promo-size-label">
+                                    <i class="ki-duotone ki-car fs-4 text-primary me-1"><span class="path1"></span><span class="path2"></span></i>
+                                    Small (S)
+                                </div>
+                                <div class="promo-size-price" id="promoPriceSmall">Rp 0</div>
+                            </div>
+                            <div class="promo-size-card" data-size="medium">
+                                <div class="promo-size-label">
+                                    <i class="ki-duotone ki-car fs-4 text-primary me-1"><span class="path1"></span><span class="path2"></span></i>
+                                    Medium (M)
+                                </div>
+                                <div class="promo-size-price" id="promoPriceMedium">Rp 0</div>
+                            </div>
+                            <div class="promo-size-card" data-size="large">
+                                <div class="promo-size-label">
+                                    <i class="ki-duotone ki-car fs-4 text-primary me-1"><span class="path1"></span><span class="path2"></span></i>
+                                    Large (L)
+                                </div>
+                                <div class="promo-size-price" id="promoPriceLarge">Rp 0</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
             <table class="table table-bordered gy-4 gs-4" id="checklistTable">
                 <thead>
                     <tr class="fw-semibold fs-7 text-gray-800 bg-light">
@@ -422,6 +468,10 @@
                 <div class="col-md-2"></div>
                 <div class="col-md-5">
                     <table class="table table-borderless">
+                        <tr>
+                            <td class="fw-semibold text-end">Paket Promo:</td>
+                            <td class="fw-bold text-end text-primary" id="displayPromoPackage">Rp 0</td>
+                        </tr>
                         <tr>
                             <td class="fw-semibold text-end">Subtotal:</td>
                             <td class="fw-bold text-end" id="displaySubtotal">Rp 0</td>
@@ -569,6 +619,10 @@
             <td id="print_subtotal_material">Rp 0</td>
         </tr>
         <tr>
+            <td><strong>Paket Promo:</strong></td>
+            <td id="print_promo_package">Rp 0</td>
+        </tr>
+        <tr>
             <td><strong>Diskon:</strong></td>
             <td id="print_discount">Rp 0</td>
         </tr>
@@ -709,6 +763,8 @@
         'complaint' => $order->complaint,
         'discount' => (int) $order->discount,
         'other_service_price' => (int) ($order->other_service_price ?? 0),
+        'promo_package_id' => $order->promo_package_id,
+        'promo_package_price' => (int) ($order->promo_package_price ?? 0),
         'status' => $order->status,
         'items' => $order->items->map(fn ($item) => [
             'checklist_item_id' => $item->checklist_item_id,
@@ -781,6 +837,7 @@ function setVehicleSize(value) {
         input.closest('.vehicle-size-option').classList.toggle('bg-light-primary', checked);
     });
     refreshChecklistPrices();
+    refreshPromoPackagePrice();
 }
 
 function getChecklistPriceForSize(check) {
@@ -797,6 +854,46 @@ function refreshChecklistPrices() {
     $('.checklist-price-cell').removeClass('bg-light-primary text-primary fw-bold');
     $('.checklist-price-cell[data-size="' + selectedVehicleSize + '"]').addClass('bg-light-primary text-primary fw-bold');
     recalculate();
+}
+
+function getPromoPackagePrice() {
+    var selected = $('#promo_package_id').find(':selected');
+
+    if (!selected.val()) {
+        return 0;
+    }
+
+    return parseInt(selected.data('price-' + selectedVehicleSize)) || 0;
+}
+
+function getPromoPackagePrices() {
+    var selected = $('#promo_package_id').find(':selected');
+
+    if (!selected.val()) {
+        return { small: 0, medium: 0, large: 0 };
+    }
+
+    return {
+        small: parseInt(selected.data('price-small')) || 0,
+        medium: parseInt(selected.data('price-medium')) || 0,
+        large: parseInt(selected.data('price-large')) || 0,
+    };
+}
+
+function refreshPromoPackagePrice() {
+    var price = getPromoPackagePrice();
+    var prices = getPromoPackagePrices();
+    var selected = $('#promo_package_id').find(':selected');
+
+    $('#promo_package_price').val(price);
+    $('#promoPriceSmall').text('Rp ' + formatNumber(prices.small));
+    $('#promoPriceMedium').text('Rp ' + formatNumber(prices.medium));
+    $('#promoPriceLarge').text('Rp ' + formatNumber(prices.large));
+    $('#displayPromoPackage').text('Rp ' + formatNumber(price));
+    $('#print_promo_package').text('Rp ' + formatNumber(price));
+    $('#promoPackageHint').text(selected.val() ? 'Harga aktif mengikuti ukuran mobil saat ini.' : 'Pilih paket untuk melihat harga S/M/L.');
+    $('.promo-size-card').removeClass('active');
+    $('.promo-size-card[data-size="' + selectedVehicleSize + '"]').addClass('active');
 }
 
 // Select2 AJAX for plate search
@@ -895,6 +992,12 @@ $(document).ready(function() {
         width: '100%'
     });
 
+    $('#promo_package_id').select2({
+        placeholder: 'Pilih paket promo',
+        allowClear: true,
+        width: '100%'
+    });
+
     $('.bank-account-select').select2({
         width: '100%',
         templateResult: bankOptionTemplate,
@@ -905,6 +1008,11 @@ $(document).ready(function() {
     $('#mechanic').on('change', function() {
         var phone = $(this).find(':selected').data('phone') || '';
         $('#mechanic_number').val(phone);
+    });
+
+    $('#promo_package_id').on('change', function() {
+        refreshPromoPackagePrice();
+        recalculate();
     });
 
     $('.numeric-separator').on('input', function() {
@@ -994,6 +1102,7 @@ function initEditOrder() {
     $('#discount_display').val(formatDigits(initialOrder.discount || 0));
     $('#other_service_price').val(initialOrder.other_service_price || 0);
     $('#other_service_price_display').val(formatDigits(initialOrder.other_service_price || 0));
+    $('#promo_package_id').val(initialOrder.promo_package_id || null).trigger('change');
 
     setVehicleSize(initialOrder.vehicle_size || 'small');
 
@@ -1104,14 +1213,21 @@ function recalculate() {
     });
 
     var otherServicePrice = parseInt(($('#other_service_price').val() || '0').replace(/[^\d]/g, '')) || 0;
-    var subtotal = materialSubtotal + checklistSubtotal + otherServicePrice;
+    var promoPackagePrice = getPromoPackagePrice();
+    var subtotal = materialSubtotal + checklistSubtotal + otherServicePrice + promoPackagePrice;
     var discount = parseInt(($('#discount').val() || '0').replace(/[^\d]/g, '')) || 0;
     var total = subtotal - discount;
 
     $('#subtotalMaterial').text('Rp ' + formatNumber(materialSubtotal));
-    $('#checklistSubtotalDisplay').text('Subtotal: Rp ' + formatNumber(checklistSubtotal));
+    $('#promo_package_price').val(promoPackagePrice);
+    $('#displayPromoPackage').text('Rp ' + formatNumber(promoPackagePrice));
     $('#displaySubtotal').text('Rp ' + formatNumber(subtotal));
     $('#displayTotal').text('Rp ' + formatNumber(total));
+    $('#print_subtotal_jasa').text('Rp ' + formatNumber(checklistSubtotal + otherServicePrice));
+    $('#print_subtotal_material').text('Rp ' + formatNumber(materialSubtotal));
+    $('#print_promo_package').text('Rp ' + formatNumber(promoPackagePrice));
+    $('#print_discount').text('Rp ' + formatNumber(discount));
+    $('#print_total').html('<strong>Rp ' + formatNumber(total) + '</strong>');
 }
 
 // Recalculate saat checkbox checklist dicentang/uncentang atau harga diubah
@@ -1148,6 +1264,7 @@ function submitOrder(status) {
         complaint: $('#complaint').val(),
         discount: $('#discount').val() || 0,
         other_service_price: $('#other_service_price').val() || 0,
+        promo_package_id: $('#promo_package_id').val() || '',
         status: status,
         items: [],
         materials_used: []
@@ -1203,6 +1320,7 @@ function submitOrder(status) {
     fd.append('mechanic_number', $('#mechanic_number').val() || '');
     fd.append('discount', formData.discount);
     fd.append('other_service_price', formData.other_service_price);
+    fd.append('promo_package_id', formData.promo_package_id);
     fd.append('status', formData.status);
     fd.append('bank_account_id', $('#bank_account_id').val() || '');
 
@@ -1534,6 +1652,61 @@ setVehicleSize('small');
 #printInfoBlock { display: none; }
 #printTotalBlock { display: none; }
 
+.promo-package-panel {
+    border: 1px solid #e5e7eb;
+    border-radius: 8px;
+    background: #f8fafc;
+    padding: 16px;
+}
+
+.promo-size-grid {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 12px;
+    height: 100%;
+}
+
+.promo-size-card {
+    min-height: 54px;
+    border: 1px solid #e5e7eb;
+    border-radius: 8px;
+    background: #fff;
+    padding: 10px 12px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+    transition: border-color .15s ease, background-color .15s ease, box-shadow .15s ease;
+    min-width: 0;
+}
+
+.promo-size-card.active {
+    border-color: #1d4ed8;
+    background: #eff6ff;
+    box-shadow: 0 8px 20px rgba(29, 78, 216, .10);
+}
+
+.promo-size-label {
+    color: #5e6278;
+    font-size: 11px;
+    font-weight: 800;
+    text-transform: uppercase;
+    white-space: nowrap;
+}
+
+.promo-size-price {
+    color: #181c32;
+    font-size: 15px;
+    font-weight: 800;
+    text-align: right;
+    white-space: nowrap;
+}
+
+.promo-size-card.active .promo-size-label,
+.promo-size-card.active .promo-size-price {
+    color: #1d4ed8;
+}
+
 .vehicle-size-option {
     transition: border-color .15s ease, background-color .15s ease;
     min-height: 118px;
@@ -1555,6 +1728,10 @@ setVehicleSize('small');
 @media (max-width: 767.98px) {
     .order-status-control {
         width: 100%;
+    }
+
+    .promo-size-grid {
+        grid-template-columns: 1fr;
     }
 }
 </style>

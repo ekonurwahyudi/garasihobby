@@ -12,6 +12,7 @@ use App\Models\FinanceItem;
 use App\Models\FinanceTransaction;
 use App\Models\Material;
 use App\Models\Order;
+use App\Models\PromoPackage;
 use App\Models\User;
 use App\Models\Vehicle;
 use Illuminate\Http\JsonResponse;
@@ -60,8 +61,11 @@ class OrderController extends Controller
             ->orderBy('name')
             ->get(['id', 'name', 'phone']);
         $bankAccounts = BankAccount::where('is_active', true)->orderBy('bank_name')->get();
+        $promoPackages = $this->activePromoPackageQuery()
+            ->orderBy('name')
+            ->get();
 
-        return view('operasional.orders.create', compact('checklistCategories', 'materials', 'mechanics', 'bankAccounts'));
+        return view('operasional.orders.create', compact('checklistCategories', 'materials', 'mechanics', 'bankAccounts', 'promoPackages'));
     }
 
     public function edit(Order $order): View
@@ -79,8 +83,12 @@ class OrderController extends Controller
             ->orderBy('name')
             ->get(['id', 'name', 'phone']);
         $bankAccounts = BankAccount::where('is_active', true)->orderBy('bank_name')->get();
+        $promoPackages = $this->activePromoPackageQuery()
+            ->when($order->promo_package_id, fn($q) => $q->orWhereKey($order->promo_package_id))
+            ->orderBy('name')
+            ->get();
 
-        return view('operasional.orders.edit', compact('checklistCategories', 'materials', 'mechanics', 'order', 'bankAccounts'));
+        return view('operasional.orders.edit', compact('checklistCategories', 'materials', 'mechanics', 'order', 'bankAccounts', 'promoPackages'));
     }
 
     public function store(Request $request): JsonResponse
@@ -105,6 +113,7 @@ class OrderController extends Controller
             'complaint' => 'nullable|string|max:2000',
             'discount' => 'nullable|numeric|min:0',
             'other_service_price' => 'nullable|numeric|min:0',
+            'promo_package_id' => 'nullable|exists:promo_packages,id',
             'status' => 'required|in:draft,open,belum_bayar,selesai',
             'bank_account_id' => 'required_if:status,selesai|nullable|exists:bank_accounts,id',
             'items' => 'nullable|array',
@@ -147,6 +156,18 @@ class OrderController extends Controller
                 Vehicle::whereKey($vehicleId)->update(['vehicle_size' => $request->vehicle_size]);
             }
 
+            $promoPackage = $request->promo_package_id
+                ? (
+                    (string) $request->promo_package_id === (string) $order->promo_package_id
+                        ? PromoPackage::find($request->promo_package_id)
+                        : $this->activePromoPackageQuery()->find($request->promo_package_id)
+                )
+                : null;
+            if ($request->promo_package_id && !$promoPackage) {
+                throw ValidationException::withMessages(['promo_package_id' => 'Paket promo tidak aktif atau sudah tidak berlaku.']);
+            }
+            $promoPackagePrice = $promoPackage ? $this->promoPackagePrice($promoPackage, $request->vehicle_size) : 0;
+
             $order = Order::create([
                 'order_number' => $this->generateOrderNumber(),
                 'invoice_token' => $this->generateInvoiceToken(),
@@ -162,6 +183,10 @@ class OrderController extends Controller
                 'mechanic_number' => $request->mechanic_number,
                 'discount' => $request->discount ?? 0,
                 'other_service_price' => $request->other_service_price ?? 0,
+                'promo_package_id' => $promoPackage?->id,
+                'promo_package_name' => $promoPackage?->name,
+                'promo_package_description' => $promoPackage?->description,
+                'promo_package_price' => $promoPackagePrice,
                 'status' => $request->status,
                 'bank_account_id' => $request->bank_account_id,
                 'created_by' => auth()->id(),
@@ -199,7 +224,7 @@ class OrderController extends Controller
             }
 
             // Calculate total
-            $subtotal = $checklistTotal + $materialTotal + (float) ($request->other_service_price ?? 0);
+            $subtotal = $checklistTotal + $materialTotal + (float) ($request->other_service_price ?? 0) + $promoPackagePrice;
             $order->update([
                 'subtotal' => $subtotal,
                 'total' => $subtotal - ($request->discount ?? 0),
@@ -224,6 +249,7 @@ class OrderController extends Controller
             'complaint' => 'nullable|string|max:2000',
             'discount' => 'nullable|numeric|min:0',
             'other_service_price' => 'nullable|numeric|min:0',
+            'promo_package_id' => 'nullable|exists:promo_packages,id',
             'status' => 'required|in:draft,open,belum_bayar,selesai',
             'bank_account_id' => 'required_if:status,selesai|nullable|exists:bank_accounts,id',
             'items' => 'nullable|array',
@@ -244,6 +270,14 @@ class OrderController extends Controller
         DB::transaction(function () use ($request, $order) {
             Vehicle::whereKey($order->vehicle_id)->update(['vehicle_size' => $request->vehicle_size]);
 
+            $promoPackage = $request->promo_package_id
+                ? $this->activePromoPackageQuery()->find($request->promo_package_id)
+                : null;
+            if ($request->promo_package_id && !$promoPackage) {
+                throw ValidationException::withMessages(['promo_package_id' => 'Paket promo tidak aktif atau sudah tidak berlaku.']);
+            }
+            $promoPackagePrice = $promoPackage ? $this->promoPackagePrice($promoPackage, $request->vehicle_size) : 0;
+
             $order->update([
                 'order_date' => $request->order_date,
                 'complaint' => $request->complaint,
@@ -255,6 +289,10 @@ class OrderController extends Controller
                 'mechanic_number' => $request->mechanic_number,
                 'discount' => $request->discount ?? 0,
                 'other_service_price' => $request->other_service_price ?? 0,
+                'promo_package_id' => $promoPackage?->id,
+                'promo_package_name' => $promoPackage?->name,
+                'promo_package_description' => $promoPackage?->description,
+                'promo_package_price' => $promoPackagePrice,
                 'status' => $request->status,
                 'bank_account_id' => $request->bank_account_id,
                 'evidence_work_paths' => array_values(array_filter(array_merge(
@@ -282,7 +320,7 @@ class OrderController extends Controller
 
     public function show(Order $order): View
     {
-        $order->load(['customer', 'vehicle', 'items.checklistItem.category', 'materials', 'creator']);
+        $order->load(['customer', 'vehicle', 'items.checklistItem.category', 'materials', 'creator', 'promoPackage']);
         return view('operasional.orders.show', compact('order'));
     }
 
@@ -290,7 +328,7 @@ class OrderController extends Controller
     {
         abort_unless($order->status === 'selesai', 404);
 
-        $order->load(['customer', 'vehicle', 'items.checklistItem.category', 'materials', 'creator']);
+        $order->load(['customer', 'vehicle', 'items.checklistItem.category', 'materials', 'creator', 'promoPackage']);
         return view('operasional.orders.invoice', [
             'order' => $order,
             'invoiceShareUrl' => route('orders.invoice.share', $this->invoiceShareToken($order)),
@@ -304,7 +342,7 @@ class OrderController extends Controller
 
         abort_unless($order->status === 'selesai', 404);
 
-        $order->load(['customer', 'vehicle', 'items.checklistItem.category', 'materials', 'creator']);
+        $order->load(['customer', 'vehicle', 'items.checklistItem.category', 'materials', 'creator', 'promoPackage']);
         return view('operasional.orders.invoice', [
             'order' => $order,
             'invoiceShareUrl' => route('orders.invoice.share', $this->invoiceShareToken($order)),
@@ -385,11 +423,30 @@ class OrderController extends Controller
             }
         }
 
-        $subtotal = $checklistTotal + $materialTotal + (float) ($request->other_service_price ?? 0);
+        $subtotal = $checklistTotal
+            + $materialTotal
+            + (float) ($request->other_service_price ?? 0)
+            + (float) ($order->promo_package_price ?? 0);
         $order->update([
             'subtotal' => $subtotal,
             'total' => $subtotal - ($request->discount ?? 0),
         ]);
+    }
+
+    private function promoPackagePrice(PromoPackage $promoPackage, ?string $vehicleSize): float
+    {
+        return match ($vehicleSize) {
+            'medium' => (float) ($promoPackage->price_medium ?: $promoPackage->price),
+            'large' => (float) ($promoPackage->price_large ?: $promoPackage->price),
+            default => (float) ($promoPackage->price_small ?: $promoPackage->price),
+        };
+    }
+
+    private function activePromoPackageQuery()
+    {
+        return PromoPackage::where('is_active', true)
+            ->where(fn($q) => $q->whereNull('valid_from')->orWhereDate('valid_from', '<=', today()))
+            ->where(fn($q) => $q->whereNull('valid_until')->orWhereDate('valid_until', '>=', today()));
     }
 
     private function syncOrderFinanceTransaction(Order $order): void
