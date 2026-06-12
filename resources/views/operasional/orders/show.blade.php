@@ -46,6 +46,8 @@
     $materialTotal = $order->materials->sum('subtotal');
     $promoDescription = $order->promo_package_description ?: $order->promoPackage?->description;
     $hasPromoPackage = $order->promo_package_name || (float) ($order->promo_package_price ?? 0) > 0;
+    $otherServiceDescription = trim((string) ($order->other_service_description ?: 'Jasa Lainnya'));
+    $hasOtherService = (float) ($order->other_service_price ?? 0) > 0 || filled($order->other_service_description);
     $evidenceGroups = [
         'Eviden Checklist / Pekerjaan' => collect($order->evidence_work_paths ?? []),
         'Eviden Pembayaran' => collect($order->evidence_payment_paths ?? []),
@@ -177,6 +179,31 @@
 </div>
 @endif
 
+{{-- Jasa Tambahan --}}
+@if($hasOtherService)
+<div class="card card-flush mb-7">
+    <div class="card-header pt-5">
+        <h3 class="card-title fw-bold">Jasa Tambahan</h3>
+    </div>
+    <div class="card-body pt-0">
+        <table class="table table-bordered gy-4 gs-4">
+            <thead>
+                <tr class="fw-semibold fs-7 text-gray-800 bg-light">
+                    <th>Keterangan</th>
+                    <th class="text-end w-180px">Harga</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td class="fw-semibold">{{ $otherServiceDescription }}</td>
+                    <td class="text-end">Rp {{ number_format($order->other_service_price ?? 0, 0, ',', '.') }}</td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+</div>
+@endif
+
 {{-- Paket Promo --}}
 @if($hasPromoPackage)
 <div class="card card-flush mb-7">
@@ -277,7 +304,7 @@
                         <strong>Rp {{ number_format($materialTotal, 0, ',', '.') }}</strong>
                     </div>
                     <div class="total-row">
-                        <span>Jasa Lainnya</span>
+                        <span>{{ $otherServiceDescription }}</span>
                         <strong>Rp {{ number_format($order->other_service_price ?? 0, 0, ',', '.') }}</strong>
                     </div>
                     <div class="total-row">

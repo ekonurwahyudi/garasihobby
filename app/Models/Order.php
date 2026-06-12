@@ -16,7 +16,7 @@ class Order extends Model
         'order_number', 'invoice_token', 'order_date', 'customer_id', 'vehicle_id',
         'complaint', 'mileage', 'km_service', 'km_return',
         'head_mechanic', 'mechanic', 'mechanic_number',
-        'subtotal', 'discount', 'other_service_price',
+        'subtotal', 'discount', 'other_service_description', 'other_service_price',
         'promo_package_id', 'promo_package_name', 'promo_package_description', 'promo_package_price',
         'total', 'status', 'created_by', 'paid_at',
         'bank_account_id', 'finance_transaction_id',

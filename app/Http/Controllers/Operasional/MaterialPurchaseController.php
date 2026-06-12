@@ -288,6 +288,8 @@ class MaterialPurchaseController extends Controller
             return back()->with('error', 'Pembelian ini sudah diproses.');
         }
 
+        $this->markApprovalNotificationsRead(route('material-purchases.show', $transaction));
+
         DB::transaction(function () use ($items, $transaction) {
             foreach ($items as $item) {
                 $stock = MaterialStock::firstOrCreate(
@@ -334,6 +336,8 @@ class MaterialPurchaseController extends Controller
         if ($items->first()->status !== 'menunggu_approval') {
             return back()->with('error', 'Pembelian ini sudah diproses.');
         }
+
+        $this->markApprovalNotificationsRead(route('material-purchases.show', $transaction));
 
         MaterialPurchase::where('invoice_number', $transaction)->update([
             'status' => 'ditolak',
@@ -579,13 +583,40 @@ class MaterialPurchaseController extends Controller
     {
         $users = User::permission('purchases.approve')->where('status', 'aktif')->get();
         $message = 'Pembelian ' . $transactionNumber . ' menunggu approval' . ($supplier ? ' dari ' . $supplier : '') . '.';
+        $url = route('material-purchases.show', $transactionNumber);
+
+        $this->markApprovalNotificationsRead($url);
 
         $this->insertNotifications($users, [
             'title' => 'Approval Pembelian Material',
             'message' => $message,
-            'url' => route('material-purchases.show', $transactionNumber),
+            'url' => $url,
             'icon' => 'purchase',
         ]);
+    }
+
+    private function markApprovalNotificationsRead(string $url): void
+    {
+        $now = now();
+        $notificationIds = DB::table('notifications')
+            ->whereNull('read_at')
+            ->where('data', 'like', '%"title":"Approval%')
+            ->get(['id', 'data'])
+            ->filter(function ($notification) use ($url) {
+                $data = json_decode((string) $notification->data, true) ?: [];
+
+                return ($data['url'] ?? null) === $url;
+            })
+            ->pluck('id')
+            ->all();
+
+        if (empty($notificationIds)) {
+            return;
+        }
+
+        DB::table('notifications')
+            ->whereIn('id', $notificationIds)
+            ->update(['read_at' => $now, 'updated_at' => $now]);
     }
 
     private function notifySubmitter(MaterialPurchase $purchase, string $title, string $message, string $icon): void

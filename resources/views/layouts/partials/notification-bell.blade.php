@@ -1,6 +1,7 @@
 {{-- Notification Bell --}}
 @can('notifications.view')
 @php
+    \App\Support\NotificationCleanup::markResolvedApprovalNotificationsRead(auth()->user());
     $unreadNotifications = auth()->user()->unreadNotifications()->latest()->take(10)->get();
     $unreadCount = auth()->user()->unreadNotifications()->count();
 @endphp

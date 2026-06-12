@@ -153,7 +153,7 @@
 
 @push('scripts')
 <script>
-var table=$('#kt_table').DataTable({dom:"<'d-none'B><'row'<'col-sm-12'tr>><'row finance-table-footer'<'col-sm-12 col-md-5 d-flex align-items-center'i><'col-sm-12 col-md-7 d-flex justify-content-end'p>>",order:[],pageLength:10,columnDefs:[{orderable:false,targets:[0,1,9]}]});
+var table=$('#kt_table').DataTable({dom:"<'d-none'B><'row'<'col-sm-12'tr>><'row finance-table-footer'<'col-sm-12 col-md-5 d-flex align-items-center'i><'col-sm-12 col-md-7 d-flex justify-content-end'p>>",ordering:false,pageLength:10,columnDefs:[{orderable:false,targets:[0,1,9]}]});
 $('#searchInput').on('keyup',function(){table.search(this.value).draw();});
 $('#lengthSelect').on('change',function(){table.page.len($(this).val()).draw();});
 function openRejectModal(action, number){document.getElementById('rejectForm').action=action;document.getElementById('rejectNumber').textContent=number;new bootstrap.Modal(document.getElementById('rejectModal')).show();}

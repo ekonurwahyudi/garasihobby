@@ -53,6 +53,56 @@
             background: #fff;
             border-radius: 18px;
             box-shadow: 0 18px 44px rgba(15, 23, 42, .14);
+            position: relative;
+            overflow: hidden;
+        }
+        .paid-watermark {
+            position: fixed;
+            left: 50%;
+            top: 50%;
+            z-index: 0;
+            width: 130mm;
+            height: 42mm;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 14px;
+            transform: translate(-50%, -50%) rotate(-28deg);
+            border: 6px solid rgba(16, 185, 129, .13);
+            border-radius: 16px;
+            color: rgba(16, 185, 129, .13);
+            font-size: 46px;
+            font-weight: 900;
+            letter-spacing: 8px;
+            text-transform: uppercase;
+            pointer-events: none;
+        }
+        .paid-watermark svg {
+            width: 54px;
+            height: 54px;
+            flex: 0 0 auto;
+            stroke: currentColor;
+        }
+        .paid-watermark::before,
+        .paid-watermark::after {
+            content: "";
+            position: absolute;
+            inset: 7px;
+            border: 2px solid rgba(16, 185, 129, .11);
+            border-radius: 10px;
+        }
+        .paid-watermark::after {
+            inset: auto;
+            left: 18px;
+            bottom: 12px;
+            width: 26px;
+            height: 22px;
+            border-width: 3px;
+            transform: rotate(14deg);
+        }
+        .sheet > :not(.paid-watermark) {
+            position: relative;
+            z-index: 1;
         }
         .header {
             display: flex;
@@ -147,7 +197,7 @@
             border: 1px solid #e2e8f0;
             border-radius: 14px;
             padding: 14px;
-            background: #f8fafc;
+            background: transparent;
         }
         .info-table td {
             padding: 4px 0;
@@ -159,20 +209,21 @@
         }
         .items-table th,
         .items-table td {
-            border-bottom: 1px solid #e2e8f0;
+            border: 1px solid #cbd5e1;
             padding: 8px;
             vertical-align: top;
         }
         .items-table th {
-            background: #f1f5f9;
+            background: transparent;
             text-align: left;
             font-size: 12px;
-            color: #334155;
+            color: #1f2937;
+            font-weight: 600;
         }
         .items-table {
-            border: 1px solid #e2e8f0;
-            border-radius: 14px;
-            overflow: hidden;
+            border: 1px solid #cbd5e1;
+            border-radius: 0;
+            overflow: visible;
         }
         .text-end { text-align: right; }
         .totals-wrap {
@@ -182,21 +233,21 @@
         }
         .totals-table {
             width: 330px;
-            border: 1px solid #e2e8f0;
-            border-radius: 14px;
-            overflow: hidden;
+            border: 1px solid #cbd5e1;
+            border-radius: 0;
+            overflow: visible;
             background: #f8fafc;
         }
         .totals-table td {
             padding: 9px 12px;
-            border-bottom: 1px solid #eaecf0;
+            border: 1px solid #cbd5e1;
         }
         .totals-table td:last-child {
             text-align: right;
             font-weight: 700;
         }
         .grand td {
-            border-bottom: 0;
+            border-bottom: 1px solid #cbd5e1;
             padding-top: 12px;
             font-size: 17px;
             font-weight: 800;
@@ -223,13 +274,18 @@
             margin: 0 22px 6px;
         }
         @media print {
+            @page {
+                size: A4;
+                margin: 4mm 14mm 8mm;
+            }
+
             body { background: #fff; }
             .toolbar { display: none; }
             .sheet {
                 width: auto;
                 min-height: auto;
                 margin: 0;
-                padding: 10mm;
+                padding: 0;
                 border-radius: 0;
                 box-shadow: none;
             }
@@ -242,6 +298,8 @@
     $materialTotal = $order->materials->sum('subtotal');
     $promoDescription = $order->promo_package_description ?: $order->promoPackage?->description;
     $hasPromoPackage = $order->promo_package_name || (float) ($order->promo_package_price ?? 0) > 0;
+    $otherServiceDescription = trim((string) ($order->other_service_description ?: 'Jasa Lainnya'));
+    $hasOtherService = (float) ($order->other_service_price ?? 0) > 0 || filled($order->other_service_description);
     $customerPhone = preg_replace('/\D+/', '', $order->customer->phone ?? '');
     if (str_starts_with($customerPhone, '0')) {
         $customerPhone = '62' . substr($customerPhone, 1);
@@ -279,6 +337,17 @@
 </div>
 
 <main class="sheet">
+    @if($order->status === 'selesai')
+        <div class="paid-watermark">
+            <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                <rect x="3" y="6" width="18" height="12" rx="2" stroke-width="1.8"></rect>
+                <circle cx="12" cy="12" r="3" stroke-width="1.8"></circle>
+                <path d="M6.5 9.5h1.2M16.3 14.5h1.2" stroke-width="1.8" stroke-linecap="round"></path>
+            </svg>
+            <span>LUNAS</span>
+        </div>
+    @endif
+
     <div class="header">
         <div class="brand">
             <img src="{{ asset('assets/media/favicon.png') }}" alt="Garasi Hobby">
@@ -363,6 +432,26 @@
     </section>
     @endif
 
+    @if($hasOtherService)
+    <section class="section">
+        <div class="section-title">Jasa Tambahan</div>
+        <table class="items-table">
+            <thead>
+                <tr>
+                    <th>Keterangan</th>
+                    <th style="width: 130px;" class="text-end">Harga</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td>{{ $otherServiceDescription }}</td>
+                    <td class="text-end">Rp {{ number_format($order->other_service_price ?? 0, 0, ',', '.') }}</td>
+                </tr>
+            </tbody>
+        </table>
+    </section>
+    @endif
+
     @if($hasPromoPackage)
     <section class="section">
         <div class="section-title">Paket Promo</div>
@@ -415,7 +504,7 @@
         <table class="totals-table">
             <tr><td>Subtotal Checklist</td><td>Rp {{ number_format($checklistTotal, 0, ',', '.') }}</td></tr>
             <tr><td>Subtotal Material</td><td>Rp {{ number_format($materialTotal, 0, ',', '.') }}</td></tr>
-            <tr><td>Jasa Lainnya</td><td>Rp {{ number_format($order->other_service_price ?? 0, 0, ',', '.') }}</td></tr>
+            <tr><td>{{ $otherServiceDescription }}</td><td>Rp {{ number_format($order->other_service_price ?? 0, 0, ',', '.') }}</td></tr>
             <tr><td>Paket Promo{{ $order->promo_package_name ? ' - ' . $order->promo_package_name : '' }}</td><td>Rp {{ number_format($order->promo_package_price ?? 0, 0, ',', '.') }}</td></tr>
             <tr><td>Subtotal Semua</td><td>Rp {{ number_format($order->subtotal, 0, ',', '.') }}</td></tr>
             <tr><td>Diskon</td><td>Rp {{ number_format($order->discount, 0, ',', '.') }}</td></tr>

@@ -306,7 +306,7 @@
 @push('scripts')
 <script>
 var table = $('#kt_table').DataTable({
-    order: [],
+    ordering: false,
     columnDefs: [{ orderable: false, targets: [0, 8] }],
     language: {
         zeroRecords: 'Data tidak ditemukan',

@@ -1,30 +1,11 @@
 @extends('layouts.app')
 
-@section('title', 'Detail Pembelian Aset')
-
-@section('breadcrumb')
-<li class="breadcrumb-item text-muted"><a href="{{ route('asset-purchases.index') }}" class="text-muted text-hover-primary">Pembelian Aset</a></li>
-<li class="breadcrumb-item"><span class="bullet bg-gray-500 w-5px h-2px"></span></li>
-<li class="breadcrumb-item text-muted">Detail</li>
-@endsection
-
-@section('toolbar_actions')
-@php($canForceManage = auth()->user()?->hasRole('Superadmin'))
-<a href="{{ route('asset-purchases.index') }}" class="btn btn-sm btn-light"><i class="ki-duotone ki-left fs-3"></i> Kembali</a>
-@can('asset-purchases.edit')
-    @if($assetPurchase->status !== 'disetujui' || $canForceManage)
-        <a href="{{ route('asset-purchases.edit', $assetPurchase) }}" class="btn btn-sm btn-warning"><i class="ki-duotone ki-pencil fs-3"></i> Edit</a>
-    @endif
-@endcan
-@endsection
-
-@section('content')
 @php
-    $statusConfig = match($assetPurchase->status) {
-        'disetujui' => ['label'=>'Disetujui','badge'=>'badge-light-success','bg'=>'bg-light-success','text'=>'text-success','icon'=>'ki-check-circle'],
-        'ditolak' => ['label'=>'Ditolak','badge'=>'badge-light-danger','bg'=>'bg-light-danger','text'=>'text-danger','icon'=>'ki-cross-circle'],
-        default => ['label'=>'Menunggu Approval','badge'=>'badge-light-warning','bg'=>'bg-light-warning','text'=>'text-warning','icon'=>'ki-time'],
-    };
+    $statusConfig = [
+        'disetujui' => ['label' => 'Disetujui', 'badge' => 'badge-light-success', 'bg' => 'bg-light-success', 'text' => 'text-success', 'icon' => 'ki-check-circle'],
+        'ditolak' => ['label' => 'Ditolak', 'badge' => 'badge-light-danger', 'bg' => 'bg-light-danger', 'text' => 'text-danger', 'icon' => 'ki-cross-circle'],
+        'menunggu_approval' => ['label' => 'Menunggu Approval', 'badge' => 'badge-light-warning', 'bg' => 'bg-light-warning', 'text' => 'text-warning', 'icon' => 'ki-time'],
+    ][$assetPurchase->status] ?? ['label' => ucfirst(str_replace('_', ' ', (string) $assetPurchase->status)), 'badge' => 'badge-light', 'bg' => 'bg-light', 'text' => 'text-muted', 'icon' => 'ki-information'];
     $bank = $assetPurchase->bankAccount;
     $bankName = strtoupper($bank?->bank_name ?? 'BANK');
     $bankLogoFile = str_contains($bankName, 'BCA DIGITAL') ? 'BCA Digital logo.svg' :
@@ -51,6 +32,26 @@
     $methodLabel = ['straight_line' => 'Garis Lurus', 'percentage' => 'Persen', 'none' => 'Tanpa Depresiasi'][$assetPurchase->depreciation_method] ?? '-';
     $accumulatedDepreciation = max(0, (float) $assetPurchase->purchase_amount - (float) $assetPurchase->book_value);
 @endphp
+
+@section('title', 'Detail Pembelian Aset')
+
+@section('breadcrumb')
+<li class="breadcrumb-item text-muted"><a href="{{ route('asset-purchases.index') }}" class="text-muted text-hover-primary">Pembelian Aset</a></li>
+<li class="breadcrumb-item"><span class="bullet bg-gray-500 w-5px h-2px"></span></li>
+<li class="breadcrumb-item text-muted">Detail</li>
+@endsection
+
+@section('toolbar_actions')
+@php($canForceManage = auth()->user()?->hasRole('Superadmin'))
+<a href="{{ route('asset-purchases.index') }}" class="btn btn-sm btn-light"><i class="ki-duotone ki-left fs-3"></i> Kembali</a>
+@can('asset-purchases.edit')
+    @if($assetPurchase->status !== 'disetujui' || $canForceManage)
+        <a href="{{ route('asset-purchases.edit', $assetPurchase) }}" class="btn btn-sm btn-warning"><i class="ki-duotone ki-pencil fs-3"></i> Edit</a>
+    @endif
+@endcan
+@endsection
+
+@section('content')
 <div class="purchase-hero mb-7">
     <div class="row g-0">
         <div class="col-xl-8 purchase-hero-main">

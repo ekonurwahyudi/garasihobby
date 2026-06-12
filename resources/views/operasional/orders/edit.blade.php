@@ -395,9 +395,13 @@
                 @endforeach
                 </tbody>
             </table>
-            <div class="row mt-5 justify-content-end">
+            <div class="row mt-5 g-4 justify-content-end">
+                <div class="col-md-5">
+                    <label class="form-label fw-semibold">Keterangan Jasa Tambahan</label>
+                    <input type="text" name="other_service_description" id="other_service_description" class="form-control" placeholder="Contoh: Bubut disc brake, scan ECU, dll" maxlength="255" />
+                </div>
                 <div class="col-md-4">
-                    <label class="form-label fw-semibold">Harga Jasa Lainnya</label>
+                    <label class="form-label fw-semibold">Harga Jasa Tambahan</label>
                     <div class="input-group">
                         <span class="input-group-text">Rp</span>
                         <input type="text" id="other_service_price_display" class="form-control text-end" placeholder="0" inputmode="numeric" autocomplete="off" />
@@ -762,6 +766,7 @@
         'mechanic_number' => $order->mechanic_number,
         'complaint' => $order->complaint,
         'discount' => (int) $order->discount,
+        'other_service_description' => $order->other_service_description,
         'other_service_price' => (int) ($order->other_service_price ?? 0),
         'promo_package_id' => $order->promo_package_id,
         'promo_package_price' => (int) ($order->promo_package_price ?? 0),
@@ -1100,6 +1105,7 @@ function initEditOrder() {
     $('#order_status').val(initialOrder.status === 'draft' ? 'open' : (initialOrder.status || 'open'));
     $('#discount').val(initialOrder.discount || 0);
     $('#discount_display').val(formatDigits(initialOrder.discount || 0));
+    $('#other_service_description').val(initialOrder.other_service_description || '');
     $('#other_service_price').val(initialOrder.other_service_price || 0);
     $('#other_service_price_display').val(formatDigits(initialOrder.other_service_price || 0));
     $('#promo_package_id').val(initialOrder.promo_package_id || null).trigger('change');
@@ -1263,6 +1269,7 @@ function submitOrder(status) {
         vehicle_id: $('#vehicle_id').val(),
         complaint: $('#complaint').val(),
         discount: $('#discount').val() || 0,
+        other_service_description: $('#other_service_description').val() || '',
         other_service_price: $('#other_service_price').val() || 0,
         promo_package_id: $('#promo_package_id').val() || '',
         status: status,
@@ -1319,6 +1326,7 @@ function submitOrder(status) {
     fd.append('mechanic', $('#mechanic').val() || '');
     fd.append('mechanic_number', $('#mechanic_number').val() || '');
     fd.append('discount', formData.discount);
+    fd.append('other_service_description', formData.other_service_description);
     fd.append('other_service_price', formData.other_service_price);
     fd.append('promo_package_id', formData.promo_package_id);
     fd.append('status', formData.status);

@@ -24,7 +24,7 @@ class RevenueSharingController extends Controller
     {
         $defaultCutoff = $this->periodFromRequest(request());
         $data = RevenueSharing::with(['bankAccount', 'submitter', 'approver', 'rejecter'])
-            ->latest('period_end')
+            ->orderByDesc('sharing_number')
             ->latest('id')
             ->get();
         $cutoffs = RevenueCutoff::with(['activeSharings', 'sharings'])

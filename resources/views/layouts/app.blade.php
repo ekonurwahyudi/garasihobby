@@ -695,6 +695,8 @@
         @yield('modals')
     @endif
 
+    @include('layouts.partials.global-loading')
+
     {{-- Global JS --}}
     <script>var hostUrl = "{{ asset('assets/') }}/";</script>
     <script src="{{ asset('assets/plugins/global/plugins.bundle.js') }}"></script>

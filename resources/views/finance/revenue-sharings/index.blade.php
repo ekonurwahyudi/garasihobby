@@ -162,7 +162,7 @@
 
 @push('scripts')
 <script>
-var table=$('#kt_table').DataTable({dom:"<'d-none'B><'row'<'col-sm-12'tr>><'row mt-4'<'col-sm-12 col-md-5 d-flex align-items-center'i><'col-sm-12 col-md-7 d-flex justify-content-end'p>>",order:[],pageLength:10,columnDefs:[{orderable:false,targets:[0,9]}]});$('#searchInput').on('keyup',function(){table.search(this.value).draw();});$('#lengthSelect').on('change',function(){table.page.len($(this).val()).draw();});
+var table=$('#kt_table').DataTable({dom:"<'d-none'B><'row'<'col-sm-12'tr>><'row mt-4'<'col-sm-12 col-md-5 d-flex align-items-center'i><'col-sm-12 col-md-7 d-flex justify-content-end'p>>",ordering:false,pageLength:10,columnDefs:[{orderable:false,targets:[0,9]}]});$('#searchInput').on('keyup',function(){table.search(this.value).draw();});$('#lengthSelect').on('change',function(){table.page.len($(this).val()).draw();});
 function syncCutoffModal(){var type=document.getElementById('modalCutoffType').value;document.querySelector('.cutoff-modal-month').classList.toggle('d-none',type!=='monthly');document.querySelector('.cutoff-modal-quarter').classList.toggle('d-none',type!=='quarterly');}
 document.getElementById('modalCutoffType')?.addEventListener('change',syncCutoffModal);syncCutoffModal();
 function openRejectModal(action, number){document.getElementById('rejectForm').action=action;document.getElementById('rejectNumber').textContent=number;new bootstrap.Modal(document.getElementById('rejectModal')).show();}

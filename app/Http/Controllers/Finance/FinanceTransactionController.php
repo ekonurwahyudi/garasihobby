@@ -12,6 +12,7 @@ use App\Models\FinanceItem;
 use App\Models\FinanceTransaction;
 use App\Models\Material;
 use App\Models\Order;
+use App\Models\RevenueSharing;
 use App\Models\User;
 use Carbon\Carbon;
 use Illuminate\Http\JsonResponse;
@@ -29,7 +30,7 @@ class FinanceTransactionController extends Controller
     public function index(): View
     {
         $data = FinanceTransaction::with(['item.category', 'bankAccount'])
-            ->latest('created_at')
+            ->orderByDesc('transaction_number')
             ->latest('id')
             ->get();
         $importItems = FinanceItem::with('category')->where('is_active', true)->orderBy('code')->get();
@@ -237,8 +238,9 @@ class FinanceTransactionController extends Controller
         $evidenceFiles = $this->evidenceFiles($finance_transaction);
         $relatedOrder = Order::where('finance_transaction_id', $finance_transaction->id)->first();
         $relatedDebtReceivable = $this->relatedDebtReceivable($finance_transaction);
+        $relatedRevenueSharing = RevenueSharing::where('finance_transaction_id', $finance_transaction->id)->first();
 
-        return view('finance.transactions.show', compact('finance_transaction', 'evidenceFiles', 'relatedOrder', 'relatedDebtReceivable'));
+        return view('finance.transactions.show', compact('finance_transaction', 'evidenceFiles', 'relatedOrder', 'relatedDebtReceivable', 'relatedRevenueSharing'));
     }
 
     public function edit(FinanceTransaction $finance_transaction): View
@@ -299,6 +301,8 @@ class FinanceTransactionController extends Controller
             return back()->with('error', 'Transaksi ini sudah diproses.');
         }
 
+        $this->markApprovalNotificationsRead(route('finance-transactions.show', $finance_transaction));
+
         DB::transaction(function () use ($finance_transaction) {
             $bank = BankAccount::lockForUpdate()->findOrFail($finance_transaction->bank_account_id);
             $this->applyDelta($bank, $this->delta($finance_transaction->transaction_type, (float) $finance_transaction->amount));
@@ -329,6 +333,8 @@ class FinanceTransactionController extends Controller
         if ($finance_transaction->status !== 'menunggu_approval') {
             return back()->with('error', 'Transaksi ini sudah diproses.');
         }
+
+        $this->markApprovalNotificationsRead(route('finance-transactions.show', $finance_transaction));
 
         $finance_transaction->update([
             'status' => 'ditolak',
@@ -676,13 +682,40 @@ class FinanceTransactionController extends Controller
     {
         $users = User::permission('finance-transactions.approve')->where('status', 'aktif')->get();
         $message = 'Transaksi ' . $transaction->transaction_number . ' menunggu approval.';
+        $url = route('finance-transactions.show', $transaction);
+
+        $this->markApprovalNotificationsRead($url);
 
         $this->insertNotifications($users, [
             'title' => 'Approval Input Keuangan',
             'message' => $message,
-            'url' => route('finance-transactions.show', $transaction),
+            'url' => $url,
             'icon' => 'wallet',
         ]);
+    }
+
+    private function markApprovalNotificationsRead(string $url): void
+    {
+        $now = now();
+        $notificationIds = DB::table('notifications')
+            ->whereNull('read_at')
+            ->where('data', 'like', '%"title":"Approval%')
+            ->get(['id', 'data'])
+            ->filter(function ($notification) use ($url) {
+                $data = json_decode((string) $notification->data, true) ?: [];
+
+                return ($data['url'] ?? null) === $url;
+            })
+            ->pluck('id')
+            ->all();
+
+        if (empty($notificationIds)) {
+            return;
+        }
+
+        DB::table('notifications')
+            ->whereIn('id', $notificationIds)
+            ->update(['read_at' => $now, 'updated_at' => $now]);
     }
 
     private function notifySubmitter(FinanceTransaction $transaction, string $title, string $message, string $icon): void

@@ -764,7 +764,7 @@ var table = $('#kt_table').DataTable({
             modifier: { search: 'applied', order: 'applied', page: 'all' }
         }
     }],
-    order: [],
+    ordering: false,
     pageLength: 10,
     columnDefs: [{ orderable: false, targets: [0, 8] }],
     language: {

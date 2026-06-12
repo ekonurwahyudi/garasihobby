@@ -23,7 +23,7 @@ class AssetPurchaseController extends Controller
     public function index(): View
     {
         $data = AssetPurchase::with(['bankAccount', 'submitter', 'approver', 'rejecter'])
-            ->latest('purchase_date')
+            ->orderByDesc('asset_number')
             ->latest('id')
             ->get();
 

@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Support\NotificationCleanup;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Notifications\DatabaseNotification;
 use Illuminate\View\View;
@@ -10,6 +11,8 @@ class NotificationController extends Controller
 {
     public function index(): View
     {
+        NotificationCleanup::markResolvedApprovalNotificationsRead(auth()->user());
+
         $notifications = auth()->user()
             ->notifications()
             ->latest()

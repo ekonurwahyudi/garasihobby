@@ -376,9 +376,13 @@
                 @endforeach
                 </tbody>
             </table>
-            <div class="row mt-5 justify-content-end">
+            <div class="row mt-5 g-4 justify-content-end">
+                <div class="col-md-5">
+                    <label class="form-label fw-semibold">Keterangan Jasa Tambahan</label>
+                    <input type="text" name="other_service_description" id="other_service_description" class="form-control" placeholder="Contoh: Bubut disc brake, scan ECU, dll" maxlength="255" />
+                </div>
                 <div class="col-md-4">
-                    <label class="form-label fw-semibold">Harga Jasa Lainnya</label>
+                    <label class="form-label fw-semibold">Harga Jasa Tambahan</label>
                     <div class="input-group">
                         <span class="input-group-text">Rp</span>
                         <input type="text" id="other_service_price_display" class="form-control text-end" placeholder="0" inputmode="numeric" autocomplete="off" />
@@ -718,6 +722,7 @@ var isEditMode = false;
 var orderSubmitUrl = @json(route('orders.store'));
 var orderSubmitMethod = 'POST';
 var initialOrder = null;
+var isSubmittingOrder = false;
 var vehicleSizeLabels = {
     small: 'S - City Car / Hatchback / Sedan Kecil',
     medium: 'M - MPV / SUV Medium / Pickup Ringan',
@@ -1008,6 +1013,7 @@ function initEditOrder() {
     $('#order_status').val(initialOrder.status === 'draft' ? 'open' : (initialOrder.status || 'open'));
     $('#discount').val(initialOrder.discount || 0);
     $('#discount_display').val(formatDigits(initialOrder.discount || 0));
+    $('#other_service_description').val(initialOrder.other_service_description || '');
     $('#other_service_price').val(initialOrder.other_service_price || 0);
     $('#other_service_price_display').val(formatDigits(initialOrder.other_service_price || 0));
 
@@ -1161,8 +1167,121 @@ function formatNumber(n) {
     return n.toFixed(0).replace(/\B(?=(\d{3})+(?!\d))/g, ".");
 }
 
+function orderFieldLabel(field) {
+    var labels = {
+        order_date: 'Tanggal order',
+        customer_id: 'Pelanggan',
+        vehicle_id: 'Kendaraan',
+        new_plate: 'Plat mobil',
+        new_name: 'Nama pemilik',
+        new_phone: 'No HP',
+        new_email: 'Email',
+        new_brand: 'Merk',
+        new_model: 'Jenis mobil',
+        new_year: 'Tahun',
+        vehicle_size: 'Ukuran mobil',
+        complaint: 'Keluhan / catatan',
+        discount: 'Diskon',
+        other_service_description: 'Keterangan jasa lainnya',
+        other_service_price: 'Harga jasa lainnya',
+        promo_package_id: 'Paket promo',
+        status: 'Status order',
+        bank_account_id: 'Bank pembayaran',
+        items: 'Item pengecekan',
+        materials_used: 'Material',
+        evidences_work: 'Eviden pekerjaan',
+        evidences_payment: 'Eviden pembayaran'
+    };
+
+    var normalized = (field || '').replace(/\.\d+\./g, '.').replace(/\.\d+$/g, '');
+    return labels[field] || labels[normalized] || field;
+}
+
+function showOrderError(title, message, details) {
+    var detailHtml = '';
+    if (details && details.length) {
+        detailHtml = '<ul class="text-start mb-0">' + details.map(function(detail) {
+            return '<li>' + detail + '</li>';
+        }).join('') + '</ul>';
+    }
+
+    Swal.fire({
+        icon: 'error',
+        title: title || 'Order gagal disimpan',
+        html: '<div class="text-start">' + (message || 'Periksa kembali data order.') + '</div>' + detailHtml,
+        confirmButtonText: 'Mengerti'
+    });
+}
+
+function setOrderSubmitLoading(isLoading, button) {
+    isSubmittingOrder = isLoading;
+    var buttons = $('#btnDraftOrder, #btnSaveOrder');
+    buttons.prop('disabled', isLoading);
+
+    if (!isLoading) {
+        buttons.each(function() {
+            var originalHtml = $(this).data('original-html');
+            if (originalHtml) {
+                $(this).html(originalHtml);
+            }
+        });
+        return;
+    }
+
+    if (button) {
+        var btn = $(button);
+        if (!btn.data('original-html')) {
+            btn.data('original-html', btn.html());
+        }
+        btn.html('<span class="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>Menyimpan...');
+    }
+}
+
+function parseOrderResponse(response) {
+    return response.text().then(function(text) {
+        var data = null;
+        try {
+            data = text ? JSON.parse(text) : {};
+        } catch (e) {
+            data = {};
+        }
+
+        if (response.ok) {
+            return data;
+        }
+
+        var details = [];
+        if (data.errors) {
+            Object.keys(data.errors).forEach(function(field) {
+                (data.errors[field] || []).forEach(function(error) {
+                    details.push('<strong>' + orderFieldLabel(field) + ':</strong> ' + error);
+                });
+            });
+        }
+
+        var message = data.message || 'Server menolak penyimpanan order.';
+        if (response.status === 419) {
+            message = 'Sesi login atau token keamanan sudah kedaluwarsa. Refresh halaman lalu coba simpan lagi.';
+        } else if (response.status === 403) {
+            message = 'Akun ini tidak punya izin untuk menyimpan order.';
+        } else if (response.status >= 500) {
+            message = 'Terjadi error di server saat menyimpan order.';
+        }
+
+        throw {
+            status: response.status,
+            message: message,
+            details: details
+        };
+    });
+}
+
 // Submit
-function submitOrder(status) {
+function submitOrder(status, button) {
+    if (isSubmittingOrder) {
+        return;
+    }
+
     status = status || $('#order_status').val() || 'open';
     var formData = {
         order_date: $('#order_date').val(),
@@ -1170,6 +1289,7 @@ function submitOrder(status) {
         vehicle_id: $('#vehicle_id').val(),
         complaint: $('#complaint').val(),
         discount: $('#discount').val() || 0,
+        other_service_description: $('#other_service_description').val() || '',
         other_service_price: $('#other_service_price').val() || 0,
         promo_package_id: $('#promo_package_id').val() || '',
         status: status,
@@ -1191,19 +1311,33 @@ function submitOrder(status) {
     $('#materialBody tr').each(function() {
         var qty = parseInt($(this).find('.mat-qty').val()) || 0;
         var price = parseFloat($(this).find('.mat-price').val()) || 0;
-        formData.materials_used.push({
-            material_id: $(this).data('material-id'),
-            name: $(this).find('input[name$="[name]"]').val(),
-            qty: qty,
-            price: price
-        });
+        if (qty > 0) {
+            formData.materials_used.push({
+                material_id: $(this).data('material-id'),
+                name: $(this).find('input[name$="[name]"]').val(),
+                qty: qty,
+                price: price
+            });
+        }
     });
 
     // Validate
     if (!formData.customer_id && !isNewCustomer) {
-        Swal.fire('Error', 'Pilih pelanggan atau input pelanggan baru.', 'error');
+        showOrderError('Data pelanggan belum lengkap', 'Pilih plat pelanggan dari pencarian atau isi data pelanggan baru.');
         return;
     }
+
+    if (isNewCustomer && (!$('#new_plate').val() || !$('#new_name').val() || !$('#new_phone').val())) {
+        showOrderError('Data pelanggan baru belum lengkap', 'Lengkapi minimal plat mobil, nama pemilik, dan no HP sebelum menyimpan.');
+        return;
+    }
+
+    if (status === 'selesai' && !$('#bank_account_id').val()) {
+        showOrderError('Bank pembayaran belum dipilih', 'Untuk status selesai, pilih rekening/kas pembayaran masuk.');
+        return;
+    }
+
+    setOrderSubmitLoading(true, button);
 
     // Build FormData for file upload support
     var fd = new FormData();
@@ -1226,6 +1360,7 @@ function submitOrder(status) {
     fd.append('mechanic', $('#mechanic').val() || '');
     fd.append('mechanic_number', $('#mechanic_number').val() || '');
     fd.append('discount', formData.discount);
+    fd.append('other_service_description', formData.other_service_description);
     fd.append('other_service_price', formData.other_service_price);
     fd.append('promo_package_id', formData.promo_package_id);
     fd.append('status', formData.status);
@@ -1251,21 +1386,38 @@ function submitOrder(status) {
         },
         body: fd
     })
-    .then(r => r.json())
+    .then(parseOrderResponse)
     .then(data => {
         if (data.success) {
             Swal.fire('Berhasil', 'Order berhasil disimpan.', 'success').then(() => {
                 window.location.href = data.redirect || '{{ route("orders.index") }}';
             });
         } else if (data.errors) {
-            Swal.fire('Gagal', Object.values(data.errors).flat().join('<br>'), 'error');
+            var details = [];
+            Object.keys(data.errors).forEach(function(field) {
+                (data.errors[field] || []).forEach(function(error) {
+                    details.push('<strong>' + orderFieldLabel(field) + ':</strong> ' + error);
+                });
+            });
+            showOrderError('Validasi belum lengkap', 'Periksa field berikut:', details);
+        } else {
+            showOrderError('Order gagal disimpan', data.message || 'Server tidak mengembalikan status berhasil.');
         }
     })
-    .catch(() => Swal.fire('Error', 'Terjadi kesalahan.', 'error'));
+    .catch(function(error) {
+        showOrderError(
+            error.status === 422 ? 'Validasi belum lengkap' : 'Order gagal disimpan',
+            error.message || 'Terjadi kesalahan saat menghubungi server.',
+            error.details || []
+        );
+    })
+    .finally(function() {
+        setOrderSubmitLoading(false);
+    });
 }
 
-$('#btnDraftOrder').on('click', function() { submitOrder('draft'); });
-$('#btnSaveOrder').on('click', function() { submitOrder(); });
+$('#btnDraftOrder').on('click', function() { submitOrder('draft', this); });
+$('#btnSaveOrder').on('click', function() { submitOrder(null, this); });
 
 // Eviden upload preview (2 input: work & payment)
 var evidenceFiles = { work: [], payment: [] };

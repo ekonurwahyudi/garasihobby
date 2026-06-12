@@ -22,7 +22,7 @@ class DebtReceivableController extends Controller
     public function index(): View
     {
         $data = DebtReceivable::with(['bankAccount', 'payments.bankAccount', 'submitter', 'approver'])
-            ->latest('transaction_date')
+            ->orderByDesc('transaction_number')
             ->latest('id')
             ->get();
 

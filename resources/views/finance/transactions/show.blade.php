@@ -170,6 +170,14 @@
                         </a>
                     </div>
                 @endif
+                @if($relatedRevenueSharing)
+                    <div class="align-self-md-start">
+                        <a href="{{ route('revenue-sharings.show', $relatedRevenueSharing) }}" class="btn btn-light-success finance-order-link">
+                            <i class="ki-duotone ki-chart-line-up fs-3"><span class="path1"></span><span class="path2"></span></i>
+                            Lihat Detail Revenue Sharing
+                        </a>
+                    </div>
+                @endif
             </div>
 
             <div class="row g-4">

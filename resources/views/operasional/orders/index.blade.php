@@ -293,7 +293,7 @@ $(document).ready(function() {
             fixedHeader: { header: true },
             dom: "<'d-none'B><'row'<'col-sm-12'tr>><'row mt-3'<'col-sm-12 col-md-5 d-flex align-items-center'i><'col-sm-12 col-md-7 d-flex justify-content-end'p>>",
             buttons: [{ extend: 'excelHtml5', title: 'Order Management - ' + status + ' - Garasi Hobby', exportOptions: { columns: [0,1,2,3,4,5,6] } }],
-            order: [[2, 'desc']],
+            ordering: false,
             pageLength: 10,
             columnDefs: [{ orderable: false, targets: [0, 7] }],
             language: {

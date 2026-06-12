@@ -30,7 +30,8 @@ class OrderController extends Controller
     public function index(Request $request): View|JsonResponse
     {
         $query = Order::with(['customer', 'vehicle', 'creator'])
-            ->orderByDesc('created_at');
+            ->orderByDesc('order_number')
+            ->orderByDesc('id');
 
         if ($request->has('customer_id') && $request->get('format') === 'json') {
             $orders = $query->where('customer_id', $request->customer_id)->get();
@@ -84,9 +85,14 @@ class OrderController extends Controller
             ->get(['id', 'name', 'phone']);
         $bankAccounts = BankAccount::where('is_active', true)->orderBy('bank_name')->get();
         $promoPackages = $this->activePromoPackageQuery()
-            ->when($order->promo_package_id, fn($q) => $q->orWhereKey($order->promo_package_id))
             ->orderBy('name')
             ->get();
+        if ($order->promo_package_id && !$promoPackages->contains('id', $order->promo_package_id)) {
+            $existingPromo = PromoPackage::find($order->promo_package_id);
+            if ($existingPromo) {
+                $promoPackages = $promoPackages->push($existingPromo)->sortBy('name')->values();
+            }
+        }
 
         return view('operasional.orders.edit', compact('checklistCategories', 'materials', 'mechanics', 'order', 'bankAccounts', 'promoPackages'));
     }
@@ -112,6 +118,7 @@ class OrderController extends Controller
             'order_date' => 'required|date',
             'complaint' => 'nullable|string|max:2000',
             'discount' => 'nullable|numeric|min:0',
+            'other_service_description' => 'nullable|string|max:255',
             'other_service_price' => 'nullable|numeric|min:0',
             'promo_package_id' => 'nullable|exists:promo_packages,id',
             'status' => 'required|in:draft,open,belum_bayar,selesai',
@@ -157,11 +164,7 @@ class OrderController extends Controller
             }
 
             $promoPackage = $request->promo_package_id
-                ? (
-                    (string) $request->promo_package_id === (string) $order->promo_package_id
-                        ? PromoPackage::find($request->promo_package_id)
-                        : $this->activePromoPackageQuery()->find($request->promo_package_id)
-                )
+                ? $this->activePromoPackageQuery()->find($request->promo_package_id)
                 : null;
             if ($request->promo_package_id && !$promoPackage) {
                 throw ValidationException::withMessages(['promo_package_id' => 'Paket promo tidak aktif atau sudah tidak berlaku.']);
@@ -182,6 +185,7 @@ class OrderController extends Controller
                 'mechanic' => $request->mechanic,
                 'mechanic_number' => $request->mechanic_number,
                 'discount' => $request->discount ?? 0,
+                'other_service_description' => $request->other_service_description,
                 'other_service_price' => $request->other_service_price ?? 0,
                 'promo_package_id' => $promoPackage?->id,
                 'promo_package_name' => $promoPackage?->name,
@@ -248,6 +252,7 @@ class OrderController extends Controller
             'order_date' => 'required|date',
             'complaint' => 'nullable|string|max:2000',
             'discount' => 'nullable|numeric|min:0',
+            'other_service_description' => 'nullable|string|max:255',
             'other_service_price' => 'nullable|numeric|min:0',
             'promo_package_id' => 'nullable|exists:promo_packages,id',
             'status' => 'required|in:draft,open,belum_bayar,selesai',
@@ -288,6 +293,7 @@ class OrderController extends Controller
                 'mechanic' => $request->mechanic,
                 'mechanic_number' => $request->mechanic_number,
                 'discount' => $request->discount ?? 0,
+                'other_service_description' => $request->other_service_description,
                 'other_service_price' => $request->other_service_price ?? 0,
                 'promo_package_id' => $promoPackage?->id,
                 'promo_package_name' => $promoPackage?->name,
