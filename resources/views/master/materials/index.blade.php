@@ -214,7 +214,11 @@ function showErrors(errors) {
     var list = document.getElementById('formErrorList');
     list.innerHTML = '';
     Object.values(errors).forEach(function(msgs) {
-        msgs.forEach(function(msg) { list.innerHTML += '<li>' + msg + '</li>'; });
+        msgs.forEach(function(msg) {
+            var item = document.createElement('li');
+            item.textContent = msg;
+            list.appendChild(item);
+        });
     });
     document.getElementById('formErrors').classList.remove('d-none');
 }

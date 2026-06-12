@@ -9,7 +9,7 @@ return new class extends Migration
     public function up(): void
     {
         Schema::table('orders', function (Blueprint $table) {
-            $table->string('invoice_token', 10)->nullable()->unique()->after('order_number');
+            $table->string('invoice_token', 32)->nullable()->unique()->after('order_number');
         });
     }
 

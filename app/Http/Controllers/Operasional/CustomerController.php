@@ -144,7 +144,15 @@ class CustomerController extends Controller
      */
     public function searchByPlate(Request $request): JsonResponse
     {
-        $query = $request->get('q', '');
+        $validated = $request->validate([
+            'q' => 'nullable|string|max:20',
+        ]);
+
+        $query = trim((string) ($validated['q'] ?? ''));
+        if (mb_strlen($query) < 2) {
+            return response()->json([]);
+        }
+
         $vehicles = Vehicle::with('customer')
             ->where('plate_number', 'ilike', "%{$query}%")
             ->limit(10)

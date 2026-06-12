@@ -287,7 +287,9 @@ function showErrors(errors) {
     list.innerHTML = '';
     Object.values(errors).forEach(function(msgs) {
         msgs.forEach(function(msg) {
-            list.innerHTML += '<li>' + msg + '</li>';
+            var item = document.createElement('li');
+            item.textContent = msg;
+            list.appendChild(item);
         });
     });
     document.getElementById('formErrors').classList.remove('d-none');

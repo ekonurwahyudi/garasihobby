@@ -312,7 +312,11 @@ document.getElementById('editStockMetaForm').addEventListener('submit', function
             var list = document.getElementById('formErrorList');
             list.innerHTML = '';
             Object.values(data.errors || {}).forEach(function(messages) {
-                messages.forEach(function(message) { list.innerHTML += '<li>' + message + '</li>'; });
+                messages.forEach(function(message) {
+                    var item = document.createElement('li');
+                    item.textContent = message;
+                    list.appendChild(item);
+                });
             });
             document.getElementById('formErrors').classList.remove('d-none');
         });

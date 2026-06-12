@@ -73,6 +73,13 @@ class UserController extends Controller
 
     public function destroy(User $user): JsonResponse
     {
+        if ((int) $user->id === (int) auth()->id()) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Akun yang sedang digunakan tidak bisa dihapus.',
+            ], 422);
+        }
+
         $user->delete();
         return response()->json(['success' => true]);
     }

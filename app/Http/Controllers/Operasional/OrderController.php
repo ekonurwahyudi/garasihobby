@@ -367,7 +367,15 @@ class OrderController extends Controller
      */
     public function searchPlate(Request $request): JsonResponse
     {
-        $q = $request->get('q', '');
+        $validated = $request->validate([
+            'q' => 'nullable|string|max:20',
+        ]);
+
+        $q = trim((string) ($validated['q'] ?? ''));
+        if (mb_strlen($q) < 2) {
+            return response()->json([]);
+        }
+
         $vehicles = Vehicle::with('customer')
             ->where('plate_number', 'ilike', "%{$q}%")
             ->limit(10)
@@ -554,7 +562,7 @@ class OrderController extends Controller
     private function generateInvoiceToken(): string
     {
         do {
-            $token = Str::upper(Str::random(10));
+            $token = Str::upper(Str::random(32));
         } while (Order::where('invoice_token', $token)->exists());
 
         return $token;

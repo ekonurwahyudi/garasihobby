@@ -49,64 +49,64 @@ Route::middleware(['auth'])->group(function () {
     // Master Data - User
     Route::middleware('can:users.view')->group(function () {
         Route::get('/master/users', [UserController::class, 'index'])->name('users.index');
-        Route::post('/master/users', [UserController::class, 'store'])->name('users.store');
-        Route::get('/master/users/{user}/edit', [UserController::class, 'edit'])->name('users.edit');
-        Route::put('/master/users/{user}', [UserController::class, 'update'])->name('users.update');
-        Route::delete('/master/users/{user}', [UserController::class, 'destroy'])->name('users.destroy');
+        Route::post('/master/users', [UserController::class, 'store'])->middleware('can:users.create')->name('users.store');
+        Route::get('/master/users/{user}/edit', [UserController::class, 'edit'])->middleware('can:users.edit')->name('users.edit');
+        Route::put('/master/users/{user}', [UserController::class, 'update'])->middleware('can:users.edit')->name('users.update');
+        Route::delete('/master/users/{user}', [UserController::class, 'destroy'])->middleware('can:users.delete')->name('users.destroy');
     });
 
     // Pengaturan - Roles
     Route::middleware('can:roles.view')->group(function () {
         Route::get('/pengaturan/roles', [RoleController::class, 'index'])->name('roles.index');
-        Route::post('/pengaturan/roles', [RoleController::class, 'store'])->name('roles.store');
-        Route::get('/pengaturan/roles/{role}/edit', [RoleController::class, 'edit'])->name('roles.edit');
-        Route::put('/pengaturan/roles/{role}', [RoleController::class, 'update'])->name('roles.update');
-        Route::delete('/pengaturan/roles/{role}', [RoleController::class, 'destroy'])->name('roles.destroy');
+        Route::post('/pengaturan/roles', [RoleController::class, 'store'])->middleware('can:roles.create')->name('roles.store');
+        Route::get('/pengaturan/roles/{role}/edit', [RoleController::class, 'edit'])->middleware('can:roles.edit')->name('roles.edit');
+        Route::put('/pengaturan/roles/{role}', [RoleController::class, 'update'])->middleware('can:roles.edit')->name('roles.update');
+        Route::delete('/pengaturan/roles/{role}', [RoleController::class, 'destroy'])->middleware('can:roles.delete')->name('roles.destroy');
     });
 
     // Master Data - Checklist Categories
     Route::middleware('can:checklist.view')->group(function () {
         Route::get('/master/checklist-categories', [ChecklistCategoryController::class, 'index'])->name('checklist-categories.index');
-        Route::post('/master/checklist-categories', [ChecklistCategoryController::class, 'store'])->name('checklist-categories.store');
-        Route::get('/master/checklist-categories/{checklist_category}/edit', [ChecklistCategoryController::class, 'edit'])->name('checklist-categories.edit');
-        Route::put('/master/checklist-categories/{checklist_category}', [ChecklistCategoryController::class, 'update'])->name('checklist-categories.update');
-        Route::delete('/master/checklist-categories/{checklist_category}', [ChecklistCategoryController::class, 'destroy'])->name('checklist-categories.destroy');
+        Route::post('/master/checklist-categories', [ChecklistCategoryController::class, 'store'])->middleware('can:checklist.create')->name('checklist-categories.store');
+        Route::get('/master/checklist-categories/{checklist_category}/edit', [ChecklistCategoryController::class, 'edit'])->middleware('can:checklist.edit')->name('checklist-categories.edit');
+        Route::put('/master/checklist-categories/{checklist_category}', [ChecklistCategoryController::class, 'update'])->middleware('can:checklist.edit')->name('checklist-categories.update');
+        Route::delete('/master/checklist-categories/{checklist_category}', [ChecklistCategoryController::class, 'destroy'])->middleware('can:checklist.delete')->name('checklist-categories.destroy');
     });
 
     // Master Data - Checklist Items
     Route::middleware('can:checklist.view')->group(function () {
         Route::get('/master/checklist-items', [ChecklistItemController::class, 'index'])->name('checklist-items.index');
-        Route::post('/master/checklist-items', [ChecklistItemController::class, 'store'])->name('checklist-items.store');
-        Route::get('/master/checklist-items/{checklist_item}/edit', [ChecklistItemController::class, 'edit'])->name('checklist-items.edit');
-        Route::put('/master/checklist-items/{checklist_item}', [ChecklistItemController::class, 'update'])->name('checklist-items.update');
-        Route::delete('/master/checklist-items/{checklist_item}', [ChecklistItemController::class, 'destroy'])->name('checklist-items.destroy');
+        Route::post('/master/checklist-items', [ChecklistItemController::class, 'store'])->middleware('can:checklist.create')->name('checklist-items.store');
+        Route::get('/master/checklist-items/{checklist_item}/edit', [ChecklistItemController::class, 'edit'])->middleware('can:checklist.edit')->name('checklist-items.edit');
+        Route::put('/master/checklist-items/{checklist_item}', [ChecklistItemController::class, 'update'])->middleware('can:checklist.edit')->name('checklist-items.update');
+        Route::delete('/master/checklist-items/{checklist_item}', [ChecklistItemController::class, 'destroy'])->middleware('can:checklist.delete')->name('checklist-items.destroy');
     });
 
     // Master Data - Material Categories
     Route::middleware('can:materials.view')->group(function () {
         Route::get('/master/material-categories', [MaterialCategoryController::class, 'index'])->name('material-categories.index');
-        Route::post('/master/material-categories', [MaterialCategoryController::class, 'store'])->name('material-categories.store');
-        Route::get('/master/material-categories/{material_category}/edit', [MaterialCategoryController::class, 'edit'])->name('material-categories.edit');
-        Route::put('/master/material-categories/{material_category}', [MaterialCategoryController::class, 'update'])->name('material-categories.update');
-        Route::delete('/master/material-categories/{material_category}', [MaterialCategoryController::class, 'destroy'])->name('material-categories.destroy');
+        Route::post('/master/material-categories', [MaterialCategoryController::class, 'store'])->middleware('can:materials.create')->name('material-categories.store');
+        Route::get('/master/material-categories/{material_category}/edit', [MaterialCategoryController::class, 'edit'])->middleware('can:materials.edit')->name('material-categories.edit');
+        Route::put('/master/material-categories/{material_category}', [MaterialCategoryController::class, 'update'])->middleware('can:materials.edit')->name('material-categories.update');
+        Route::delete('/master/material-categories/{material_category}', [MaterialCategoryController::class, 'destroy'])->middleware('can:materials.delete')->name('material-categories.destroy');
     });
 
     // Master Data - Materials
     Route::middleware('can:materials.view')->group(function () {
         Route::get('/master/materials', [MaterialController::class, 'index'])->name('materials.index');
-        Route::post('/master/materials', [MaterialController::class, 'store'])->name('materials.store');
-        Route::get('/master/materials/{material}/edit', [MaterialController::class, 'edit'])->name('materials.edit');
-        Route::put('/master/materials/{material}', [MaterialController::class, 'update'])->name('materials.update');
-        Route::delete('/master/materials/{material}', [MaterialController::class, 'destroy'])->name('materials.destroy');
+        Route::post('/master/materials', [MaterialController::class, 'store'])->middleware('can:materials.create')->name('materials.store');
+        Route::get('/master/materials/{material}/edit', [MaterialController::class, 'edit'])->middleware('can:materials.edit')->name('materials.edit');
+        Route::put('/master/materials/{material}', [MaterialController::class, 'update'])->middleware('can:materials.edit')->name('materials.update');
+        Route::delete('/master/materials/{material}', [MaterialController::class, 'destroy'])->middleware('can:materials.delete')->name('materials.destroy');
     });
 
     // Master Data - Promo Packages
     Route::middleware('can:promo.view')->group(function () {
         Route::get('/master/promo-packages', [PromoPackageController::class, 'index'])->name('promo-packages.index');
-        Route::post('/master/promo-packages', [PromoPackageController::class, 'store'])->name('promo-packages.store');
-        Route::get('/master/promo-packages/{promo_package}/edit', [PromoPackageController::class, 'edit'])->name('promo-packages.edit');
-        Route::put('/master/promo-packages/{promo_package}', [PromoPackageController::class, 'update'])->name('promo-packages.update');
-        Route::delete('/master/promo-packages/{promo_package}', [PromoPackageController::class, 'destroy'])->name('promo-packages.destroy');
+        Route::post('/master/promo-packages', [PromoPackageController::class, 'store'])->middleware('can:promo.create')->name('promo-packages.store');
+        Route::get('/master/promo-packages/{promo_package}/edit', [PromoPackageController::class, 'edit'])->middleware('can:promo.edit')->name('promo-packages.edit');
+        Route::put('/master/promo-packages/{promo_package}', [PromoPackageController::class, 'update'])->middleware('can:promo.edit')->name('promo-packages.update');
+        Route::delete('/master/promo-packages/{promo_package}', [PromoPackageController::class, 'destroy'])->middleware('can:promo.delete')->name('promo-packages.destroy');
     });
 
     // Master Data - Keuangan
@@ -151,24 +151,24 @@ Route::middleware(['auth'])->group(function () {
     Route::middleware('can:customers.view')->group(function () {
         Route::get('/operasional/customers', [CustomerController::class, 'index'])->name('customers.index');
         Route::get('/operasional/customers/search-plate', [CustomerController::class, 'searchByPlate'])->name('customers.search-plate');
-        Route::post('/operasional/customers', [CustomerController::class, 'store'])->name('customers.store');
-        Route::get('/operasional/customers/{customer}/edit', [CustomerController::class, 'edit'])->name('customers.edit');
+        Route::post('/operasional/customers', [CustomerController::class, 'store'])->middleware('can:customers.create')->name('customers.store');
+        Route::get('/operasional/customers/{customer}/edit', [CustomerController::class, 'edit'])->middleware('can:customers.edit')->name('customers.edit');
         Route::get('/operasional/customers/{customer}', [CustomerController::class, 'show'])->name('customers.show');
-        Route::put('/operasional/customers/{customer}', [CustomerController::class, 'update'])->name('customers.update');
-        Route::delete('/operasional/customers/{customer}', [CustomerController::class, 'destroy'])->name('customers.destroy');
+        Route::put('/operasional/customers/{customer}', [CustomerController::class, 'update'])->middleware('can:customers.edit')->name('customers.update');
+        Route::delete('/operasional/customers/{customer}', [CustomerController::class, 'destroy'])->middleware('can:customers.delete')->name('customers.destroy');
     });
 
     // Operasional - Orders
     Route::middleware('can:orders.view')->group(function () {
         Route::get('/operasional/orders', [OrderController::class, 'index'])->name('orders.index');
-        Route::get('/operasional/orders/create', [OrderController::class, 'create'])->name('orders.create');
+        Route::get('/operasional/orders/create', [OrderController::class, 'create'])->middleware('can:orders.create')->name('orders.create');
         Route::get('/operasional/orders/search-plate', [OrderController::class, 'searchPlate'])->name('orders.search-plate');
-        Route::post('/operasional/orders', [OrderController::class, 'store'])->name('orders.store');
-        Route::get('/operasional/orders/{order}/edit', [OrderController::class, 'edit'])->name('orders.edit');
-        Route::put('/operasional/orders/{order}', [OrderController::class, 'update'])->name('orders.update');
+        Route::post('/operasional/orders', [OrderController::class, 'store'])->middleware('can:orders.create')->name('orders.store');
+        Route::get('/operasional/orders/{order}/edit', [OrderController::class, 'edit'])->middleware('can:orders.edit')->name('orders.edit');
+        Route::put('/operasional/orders/{order}', [OrderController::class, 'update'])->middleware('can:orders.edit')->name('orders.update');
         Route::get('/operasional/orders/{order}/invoice', [OrderController::class, 'invoice'])->name('orders.invoice');
         Route::get('/operasional/orders/{order}', [OrderController::class, 'show'])->name('orders.show');
-        Route::delete('/operasional/orders/{order}', [OrderController::class, 'destroy'])->name('orders.destroy');
+        Route::delete('/operasional/orders/{order}', [OrderController::class, 'destroy'])->middleware('can:orders.delete')->name('orders.destroy');
     });
 
     // Operasional - Pembelian Material
