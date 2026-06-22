@@ -22,7 +22,6 @@ return new class extends Migration
             $table->foreignId('created_by')->constrained('users');
             $table->timestamp('paid_at')->nullable();
             $table->timestamps();
-            $table->softDeletes();
         });
 
         Schema::create('order_items', function (Blueprint $table) {

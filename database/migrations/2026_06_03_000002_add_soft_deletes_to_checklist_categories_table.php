@@ -8,15 +8,11 @@ return new class extends Migration
 {
     public function up(): void
     {
-        Schema::table('checklist_categories', function (Blueprint $table) {
-            $table->softDeletes();
-        });
+        // Soft delete tidak lagi digunakan.
     }
 
     public function down(): void
     {
-        Schema::table('checklist_categories', function (Blueprint $table) {
-            $table->dropSoftDeletes();
-        });
+        // Tidak ada perubahan skema yang perlu dibatalkan.
     }
 };

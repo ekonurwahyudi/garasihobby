@@ -15,8 +15,6 @@ return new class extends Migration
             $table->string('jabatan', 100)->nullable()->after('name');
             $table->string('phone', 20)->nullable()->after('jabatan');
             $table->string('status', 10)->default('aktif')->after('password');
-            $table->softDeletes();
-
             $table->index('status');
         });
     }
@@ -28,7 +26,6 @@ return new class extends Migration
     {
         Schema::table('users', function (Blueprint $table) {
             $table->dropIndex(['status']);
-            $table->dropSoftDeletes();
             $table->dropColumn(['jabatan', 'phone', 'status']);
         });
     }

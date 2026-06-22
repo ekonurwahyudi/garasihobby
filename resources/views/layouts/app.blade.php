@@ -703,6 +703,72 @@
     <script src="{{ asset('assets/js/scripts.bundle.js') }}"></script>
     <script src="{{ asset('assets/plugins/custom/datatables/datatables.bundle.js') }}"></script>
     <script>
+        (function () {
+            var nativeFetch = window.fetch.bind(window);
+
+            function deleteErrorMessage(response, payload) {
+                if (response.status === 419) return 'Sesi Anda sudah berakhir. Muat ulang halaman lalu coba lagi.';
+                if (response.status === 403) return 'Anda tidak memiliki izin untuk menghapus data ini.';
+                if (response.status === 404) return 'Data yang akan dihapus tidak ditemukan atau sudah dihapus.';
+                if (response.status >= 500) return 'Terjadi kesalahan pada server. Data tidak berhasil dihapus.';
+
+                if (payload && payload.errors) {
+                    var validationMessage = Object.values(payload.errors).flat()[0];
+                    if (validationMessage) return validationMessage;
+                }
+
+                return (payload && payload.message)
+                    ? payload.message
+                    : 'Data tidak berhasil dihapus. Silakan coba lagi.';
+            }
+
+            function showDeleteError(message, status) {
+                Swal.fire({
+                    title: 'Gagal menghapus data',
+                    text: message,
+                    footer: status ? 'Kode HTTP: ' + status : undefined,
+                    icon: 'error',
+                    confirmButtonText: 'Mengerti'
+                });
+            }
+
+            window.fetch = function (input, options) {
+                var requestMethod = (options && options.method)
+                    || (typeof Request !== 'undefined' && input instanceof Request ? input.method : 'GET');
+                var method = String(requestMethod).toUpperCase();
+                var request = nativeFetch(input, options);
+
+                if (method !== 'DELETE') return request;
+
+                return request.then(async function (response) {
+                    if (response.ok) return response;
+
+                    var payload = null;
+                    try {
+                        payload = await response.clone().json();
+                    } catch (e) {
+                        // Respons non-JSON tetap ditangani dengan pesan berdasarkan status HTTP.
+                    }
+
+                    showDeleteError(deleteErrorMessage(response, payload), response.status);
+                    var error = new Error('Delete request failed');
+                    error.globalDeleteHandled = true;
+                    throw error;
+                }).catch(function (error) {
+                    if (!error.globalDeleteHandled) {
+                        showDeleteError('Tidak dapat terhubung ke server. Periksa koneksi Anda lalu coba lagi.');
+                        error.globalDeleteHandled = true;
+                    }
+                    throw error;
+                });
+            };
+
+            window.addEventListener('unhandledrejection', function (event) {
+                if (event.reason && event.reason.globalDeleteHandled) event.preventDefault();
+            });
+        })();
+    </script>
+    <script>
         if (window.jQuery && $.fn.dataTable) {
             $.extend(true, $.fn.dataTable.defaults, {
                 dom: "<'d-none'B><'row'<'col-sm-12'tr>><'row mt-3'<'col-sm-12 col-md-5 d-flex align-items-center'i><'col-sm-12 col-md-7 d-flex justify-content-end'p>>",
