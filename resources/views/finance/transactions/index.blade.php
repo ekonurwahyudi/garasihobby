@@ -11,18 +11,22 @@
 @endsection
 
 @section('toolbar_actions')
-    <a href="{{ route('finance-transactions.balance-sheet') }}" class="btn btn-sm btn-info d-inline-flex align-items-center gap-2">
-        <i class="ki-duotone ki-chart-pie-simple fs-3"><span class="path1"></span><span class="path2"></span></i> Neraca Keuangan
+    <a href="{{ route('finance-transactions.balance-sheet') }}" class="btn btn-sm btn-info">
+        <i class="ki-duotone ki-chart-pie-simple fs-3"><span class="path1"></span><span class="path2"></span></i>
+        <span>Neraca Keuangan</span>
     </a>
     <a href="#" class="btn btn-sm btn-success" id="exportExcel">
-        <i class="ki-duotone ki-file-down fs-3"><span class="path1"></span><span class="path2"></span></i> Export Excel
+        <i class="ki-duotone ki-file-down fs-3"><span class="path1"></span><span class="path2"></span></i>
+        <span>Export Excel</span>
     </a>
     @can('finance-transactions.create')
-    <button type="button" class="btn btn-sm btn-light-primary d-inline-flex align-items-center gap-2" data-bs-toggle="modal" data-bs-target="#importFinanceModal">
-        <i class="ki-duotone ki-file-up fs-2"><span class="path1"></span><span class="path2"></span></i> Import Excel
+    <button type="button" class="btn btn-sm btn-light-primary" data-bs-toggle="modal" data-bs-target="#importFinanceModal">
+        <i class="ki-duotone ki-file-up fs-2"><span class="path1"></span><span class="path2"></span></i>
+        <span>Import Excel</span>
     </button>
-    <a href="{{ route('finance-transactions.create') }}" class="btn btn-sm btn-primary d-inline-flex align-items-center gap-2">
-        <i class="ki-duotone ki-plus-circle fs-2"><span class="path1"></span><span class="path2"></span></i> Tambah Transaksi
+    <a href="{{ route('finance-transactions.create') }}" class="btn btn-sm btn-primary">
+        <i class="ki-duotone ki-plus-circle fs-2"><span class="path1"></span><span class="path2"></span></i>
+        <span>Tambah Transaksi</span>
     </a>
     @endcan
 @endsection
@@ -755,7 +759,7 @@
 <script>
 var table = $('#kt_table').DataTable({
     fixedHeader: { header: true },
-    dom: "<'d-none'B><'row'<'col-sm-12'tr>><'row finance-table-footer'<'col-sm-12 col-md-5 d-flex align-items-center'i><'col-sm-12 col-md-7 d-flex justify-content-end'p>>",
+    dom: "<'d-none'B><'gh-table-scroll'tr><'row finance-table-footer'<'col-sm-12 col-md-5 d-flex align-items-center'i><'col-sm-12 col-md-7 d-flex justify-content-end'p>>",
     buttons: [{
         extend: 'excelHtml5',
         title: 'Input Keuangan - Garasi Hobby',

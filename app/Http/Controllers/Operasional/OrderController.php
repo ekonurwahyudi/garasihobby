@@ -126,7 +126,9 @@ class OrderController extends Controller
             'items' => 'nullable|array',
             'items.*.checklist_item_id' => 'required|exists:checklist_items,id',
             'items.*.name' => 'required|string',
+            'items.*.qty' => 'nullable|integer|min:1',
             'items.*.price' => 'required|numeric|min:0',
+            'items.*.subtotal' => 'nullable|numeric|min:0',
             'materials_used' => 'nullable|array',
             'materials_used.*.material_id' => 'required|exists:materials,id',
             'materials_used.*.name' => 'required|string',
@@ -202,12 +204,17 @@ class OrderController extends Controller
             $checklistTotal = 0;
             if ($request->has('items')) {
                 foreach ($request->items as $item) {
+                    $qty = (int) ($item['qty'] ?? 1);
+                    $price = (float) $item['price'];
+                    $subtotal = (float) ($item['subtotal'] ?? ($qty * $price));
                     $order->items()->create([
                         'checklist_item_id' => $item['checklist_item_id'],
                         'name' => $item['name'],
-                        'price' => $item['price'],
+                        'qty' => $qty,
+                        'price' => $price,
+                        'subtotal' => $subtotal,
                     ]);
-                    $checklistTotal += (float) $item['price'];
+                    $checklistTotal += $subtotal;
                 }
             }
 
@@ -260,7 +267,9 @@ class OrderController extends Controller
             'items' => 'nullable|array',
             'items.*.checklist_item_id' => 'required|exists:checklist_items,id',
             'items.*.name' => 'required|string',
+            'items.*.qty' => 'nullable|integer|min:1',
             'items.*.price' => 'required|numeric|min:0',
+            'items.*.subtotal' => 'nullable|numeric|min:0',
             'materials_used' => 'nullable|array',
             'materials_used.*.material_id' => 'required|exists:materials,id',
             'materials_used.*.name' => 'required|string',
@@ -413,12 +422,17 @@ class OrderController extends Controller
         $checklistTotal = 0;
         if ($request->has('items')) {
             foreach ($request->items as $item) {
+                $qty = (int) ($item['qty'] ?? 1);
+                $price = (float) $item['price'];
+                $subtotal = (float) ($item['subtotal'] ?? ($qty * $price));
                 $order->items()->create([
                     'checklist_item_id' => $item['checklist_item_id'],
                     'name' => $item['name'],
-                    'price' => $item['price'],
+                    'qty' => $qty,
+                    'price' => $price,
+                    'subtotal' => $subtotal,
                 ]);
-                $checklistTotal += (float) $item['price'];
+                $checklistTotal += $subtotal;
             }
         }
 

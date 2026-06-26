@@ -42,7 +42,7 @@
         'large' => 'L - SUV Besar / Double Cabin / Ladder Frame',
     ];
     $status = $statusMap[$order->status] ?? ['label' => ucfirst($order->status), 'class' => 'badge-light'];
-    $checklistTotal = $order->items->sum('price');
+    $checklistTotal = $order->items->sum(fn ($item) => (float) ($item->subtotal ?: $item->price));
     $materialTotal = $order->materials->sum('subtotal');
     $promoDescription = $order->promo_package_description ?: $order->promoPackage?->description;
     $hasPromoPackage = $order->promo_package_name || (float) ($order->promo_package_price ?? 0) > 0;
@@ -160,17 +160,25 @@
                 <tr class="fw-semibold fs-7 text-gray-800 bg-light">
                     <th class="w-200px">Kategori</th>
                     <th>Nama Item</th>
-                    <th class="text-end">Harga</th>
+                    <th class="text-center w-80px">Qty</th>
+                    <th class="text-end w-150px">Harga Satuan</th>
+                    <th class="text-end w-150px">Total Harga</th>
                 </tr>
             </thead>
             <tbody>
                 @foreach($order->items as $item)
+                @php
+                    $itemQty = (int) ($item->qty ?? 1);
+                    $itemSubtotal = (float) ($item->subtotal ?: $item->price);
+                @endphp
                 <tr>
                     <td>
                         <span class="badge badge-light-primary">{{ $item->checklistItem?->category?->name ?? '-' }}</span>
                     </td>
                     <td class="fw-semibold">{{ $item->name }}</td>
+                    <td class="text-center">{{ $itemQty }}</td>
                     <td class="text-end">Rp {{ number_format($item->price, 0, ',', '.') }}</td>
+                    <td class="text-end fw-bold">Rp {{ number_format($itemSubtotal, 0, ',', '.') }}</td>
                 </tr>
                 @endforeach
             </tbody>

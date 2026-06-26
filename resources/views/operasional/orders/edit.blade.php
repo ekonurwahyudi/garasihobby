@@ -358,6 +358,7 @@
                 <thead>
                     <tr class="fw-semibold fs-7 text-gray-800 bg-light">
                         <th class="w-300px ps-4">Nama Item</th>
+                        <th class="w-90px text-center">Qty</th>
                         <th class="w-150px text-center">
                             <i class="ki-duotone ki-car fs-4 text-primary me-1"><span class="path1"></span><span class="path2"></span></i> S
                         </th>
@@ -367,13 +368,14 @@
                         <th class="w-150px text-center">
                             <i class="ki-duotone ki-car fs-4 text-primary me-1"><span class="path1"></span><span class="path2"></span></i> L
                         </th>
+                        <th class="w-150px text-center">Total Harga</th>
                     </tr>
                 </thead>
                 <tbody>
                     @foreach($checklistCategories as $cat)
                     @continue($cat->items->isEmpty())
                     <tr class="bg-primary">
-                        <td class="text-white fw-bold fs-6 ps-4" colspan="4">
+                        <td class="text-white fw-bold fs-6 ps-4" colspan="6">
                             <i class="ki-duotone ki-car fs-3 text-white me-2"><span class="path1"></span><span class="path2"></span></i>
                             {{ strtoupper($cat->name) }}
                         </td>
@@ -387,9 +389,13 @@
                             </label>
                             <input type="hidden" class="ci-price" data-id="{{ $item->id }}" value="{{ $item->price_small ?: $item->price }}" />
                         </td>
+                        <td>
+                            <input type="number" class="form-control form-control-sm text-center checklist-qty" data-id="{{ $item->id }}" value="1" min="1" />
+                        </td>
                         <td class="text-end checklist-price-cell" data-id="{{ $item->id }}" data-size="small">Rp {{ number_format($item->price_small ?: $item->price, 0, ',', '.') }}</td>
                         <td class="text-end checklist-price-cell" data-id="{{ $item->id }}" data-size="medium">Rp {{ number_format($item->price_medium ?: $item->price, 0, ',', '.') }}</td>
                         <td class="text-end checklist-price-cell" data-id="{{ $item->id }}" data-size="large">Rp {{ number_format($item->price_large ?: $item->price, 0, ',', '.') }}</td>
+                        <td class="text-end fw-bold checklist-total-cell" data-id="{{ $item->id }}">Rp 0</td>
                     </tr>
                     @endforeach
                 @endforeach
@@ -773,7 +779,9 @@
         'status' => $order->status,
         'items' => $order->items->map(fn ($item) => [
             'checklist_item_id' => $item->checklist_item_id,
+            'qty' => (int) ($item->qty ?? 1),
             'price' => (int) $item->price,
+            'subtotal' => (int) ($item->subtotal ?: $item->price),
         ])->values(),
         'materials' => $order->materials->map(fn ($material) => [
             'material_id' => $material->material_id,
@@ -848,6 +856,27 @@ function setVehicleSize(value) {
 function getChecklistPriceForSize(check) {
     var size = selectedVehicleSize || 'small';
     return parseFloat(check.data('price-' + size)) || parseFloat(check.data('price')) || 0;
+}
+
+function getChecklistQty(id) {
+    return parseInt($('.checklist-qty[data-id="' + id + '"]').val()) || 1;
+}
+
+function getChecklistUnitPrice(id) {
+    var priceStr = $('.ci-price[data-id="' + id + '"]').val() || '0';
+    return parseInt(priceStr.toString().replace(/[^\d]/g, '')) || 0;
+}
+
+function getChecklistLineTotal(id) {
+    return getChecklistUnitPrice(id) * getChecklistQty(id);
+}
+
+function refreshChecklistLineTotals() {
+    $('.checklist-check').each(function() {
+        var id = $(this).val();
+        var total = this.checked ? getChecklistLineTotal(id) : 0;
+        $('.checklist-total-cell[data-id="' + id + '"]').text('Rp ' + formatNumber(total));
+    });
 }
 
 function refreshChecklistPrices() {
@@ -1116,6 +1145,7 @@ function initEditOrder() {
         var check = $('.checklist-check[value="' + item.checklist_item_id + '"]');
         check.prop('checked', true);
         $('.ci-price[data-id="' + item.checklist_item_id + '"]').val(item.price || 0);
+        $('.checklist-qty[data-id="' + item.checklist_item_id + '"]').val(item.qty || 1);
     });
 
     (initialOrder.materials || []).forEach(function(material) {
@@ -1213,10 +1243,9 @@ function recalculate() {
     var checklistSubtotal = 0;
     $('.checklist-check:checked').each(function() {
         var id = $(this).val();
-        var priceStr = $('.ci-price[data-id="' + id + '"]').val() || '0';
-        var price = parseInt(priceStr.replace(/[^\d]/g, '')) || 0;
-        checklistSubtotal += price;
+        checklistSubtotal += getChecklistLineTotal(id);
     });
+    refreshChecklistLineTotals();
 
     var otherServicePrice = parseInt(($('#other_service_price').val() || '0').replace(/[^\d]/g, '')) || 0;
     var promoPackagePrice = getPromoPackagePrice();
@@ -1238,6 +1267,12 @@ function recalculate() {
 
 // Recalculate saat checkbox checklist dicentang/uncentang atau harga diubah
 $(document).on('change', '.checklist-check', recalculate);
+$(document).on('input change', '.checklist-qty', function() {
+    if ((parseInt(this.value) || 0) < 1) {
+        this.value = 1;
+    }
+    recalculate();
+});
 $(document).on('change', '.order-vehicle-size-check', function() {
     setVehicleSize(this.checked ? this.value : 'small');
     recalculate();
@@ -1280,10 +1315,13 @@ function submitOrder(status) {
     // Collect checked items
     $('.checklist-check:checked').each(function() {
         var id = $(this).val();
+        var qty = getChecklistQty(id);
         formData.items.push({
             checklist_item_id: id,
             name: $(this).data('name'),
-            price: parseInt(($('.ci-price[data-id="' + id + '"]').val() || '0').replace(/[^\d]/g, '')) || 0
+            qty: qty,
+            price: getChecklistUnitPrice(id),
+            subtotal: getChecklistLineTotal(id)
         });
     });
 

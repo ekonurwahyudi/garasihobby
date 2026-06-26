@@ -226,6 +226,7 @@
             overflow: visible;
         }
         .text-end { text-align: right; }
+        .text-center { text-align: center; }
         .totals-wrap {
             display: flex;
             justify-content: flex-end;
@@ -294,7 +295,7 @@
 </head>
 <body>
 @php
-    $checklistTotal = $order->items->sum('price');
+    $checklistTotal = $order->items->sum(fn ($item) => (float) ($item->subtotal ?: $item->price));
     $materialTotal = $order->materials->sum('subtotal');
     $promoDescription = $order->promo_package_description ?: $order->promoPackage?->description;
     $hasPromoPackage = $order->promo_package_name || (float) ($order->promo_package_price ?? 0) > 0;
@@ -415,16 +416,24 @@
                     <th style="width: 32px;">No</th>
                     <th style="width: 170px;">Kategori</th>
                     <th>Item</th>
-                    <th style="width: 130px;" class="text-end">Harga</th>
+                    <th style="width: 55px;" class="text-center">Qty</th>
+                    <th style="width: 115px;" class="text-end">Harga Satuan</th>
+                    <th style="width: 120px;" class="text-end">Total Harga</th>
                 </tr>
             </thead>
             <tbody>
                 @foreach($order->items as $item)
+                @php
+                    $itemQty = (int) ($item->qty ?? 1);
+                    $itemSubtotal = (float) ($item->subtotal ?: $item->price);
+                @endphp
                 <tr>
                     <td>{{ $loop->iteration }}</td>
                     <td>{{ $item->checklistItem?->category?->name ?? '-' }}</td>
                     <td>{{ $item->name }}</td>
+                    <td class="text-center">{{ $itemQty }}</td>
                     <td class="text-end">Rp {{ number_format($item->price, 0, ',', '.') }}</td>
+                    <td class="text-end">Rp {{ number_format($itemSubtotal, 0, ',', '.') }}</td>
                 </tr>
                 @endforeach
             </tbody>

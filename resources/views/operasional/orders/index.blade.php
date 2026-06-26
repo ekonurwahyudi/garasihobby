@@ -27,7 +27,7 @@
         'semua' => ['label' => 'Semua', 'pane' => 'tab_all', 'icon' => 'ki-abstract-26', 'icon_color' => 'text-info', 'badge' => 'badge-light-info'],
         'open' => ['label' => 'Open', 'pane' => 'tab_open', 'icon' => 'ki-notepad', 'icon_color' => 'text-primary', 'badge' => 'badge-light-primary'],
         'draft' => ['label' => 'Draft', 'pane' => 'tab_draft', 'icon' => 'ki-pencil', 'icon_color' => 'text-gray-600', 'badge' => 'badge-light'],
-        'belum_bayar' => ['label' => 'Belum Bayar', 'pane' => 'tab_unpaid', 'icon' => 'ki-time', 'icon_color' => 'text-warning', 'badge' => 'badge-light-warning'],
+        'belum_bayar' => ['label' => 'Payment', 'pane' => 'tab_unpaid', 'icon' => 'ki-time', 'icon_color' => 'text-warning', 'badge' => 'badge-light-warning'],
         'selesai' => ['label' => 'Selesai', 'pane' => 'tab_completed', 'icon' => 'ki-check-circle', 'icon_color' => 'text-success', 'badge' => 'badge-light-success'],
     ];
     $orderStats = [
@@ -68,7 +68,7 @@
         <ul class="nav nav-tabs nav-line-tabs nav-line-tabs-2x order-status-tabs mb-5 fs-6">
             @foreach($orderTabs as $status => $tab)
                 <li class="nav-item">
-                    <a class="nav-link {{ $loop->first ? 'active' : '' }} fw-semibold" data-bs-toggle="tab" data-status="{{ $status }}" href="#{{ $tab['pane'] }}">
+                    <a class="nav-link order-tab-{{ $status }} {{ $loop->first ? 'active' : '' }} fw-semibold" data-bs-toggle="tab" data-status="{{ $status }}" href="#{{ $tab['pane'] }}">
                         <i class="ki-duotone {{ $tab['icon'] }} {{ $tab['icon_color'] }} fs-3 me-2"><span class="path1"></span><span class="path2"></span><span class="path3"></span></i>
                         {{ $tab['label'] }}
                         <span class="badge {{ $tab['badge'] }} ms-2">{{ $status === 'semua' ? $data->count() : $data->where('status', $status)->count() }}</span>
@@ -123,7 +123,7 @@
                                     @switch($order->status)
                                         @case('draft') <span class="badge badge-light">Draft</span> @break
                                         @case('open') <span class="badge badge-light-primary">Open</span> @break
-                                        @case('belum_bayar') <span class="badge badge-light-warning">Belum Bayar</span> @break
+                                        @case('belum_bayar') <span class="badge badge-light-warning">Payment</span> @break
                                         @case('selesai') <span class="badge badge-light-success">Selesai</span> @break
                                     @endswitch
                                 </td>
@@ -224,15 +224,36 @@
 .order-stat-danger .order-stat-icon { background: #ffecef; color: #f1416c; }
 .order-stat-icon i { color: currentColor !important; }
 .order-status-tabs {
-    border-bottom-width: 3px;
+    border-bottom: 0;
+    gap: 8px;
+    padding: 0;
+    border-radius: 10px;
+    background: #fff;
 }
-.order-status-tabs .nav-link {
-    border-bottom-width: 4px;
-    padding-bottom: 1rem;
+.nav.nav-tabs.order-status-tabs .nav-link {
+    border: 1px solid transparent;
+    border-radius: 8px;
+    margin-right: 0;
+    padding: .75rem 1.65rem !important;
+    min-width: 118px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
 }
-.order-status-tabs .nav-link.active {
-    border-bottom-width: 4px;
+.nav.nav-tabs.order-status-tabs .nav-link.active {
+    box-shadow: 0 8px 18px rgba(15, 23, 42, .08);
 }
+.order-status-tabs .nav-link.order-tab-semua { background: #eef6ff; border-color: #d8eaff; }
+.order-status-tabs .nav-link.order-tab-open { background: #eff6ff; border-color: #dbeafe; }
+.order-status-tabs .nav-link.order-tab-draft { background: #f8fafc; border-color: #e2e8f0; }
+.order-status-tabs .nav-link.order-tab-belum_bayar { background: #fff8e6; border-color: #ffedb8; }
+.order-status-tabs .nav-link.order-tab-selesai { background: #ecfdf3; border-color: #c9f2dc; }
+.order-status-tabs .nav-link.active.order-tab-semua { background: #dceeff; border-color: #1b84ff; }
+.order-status-tabs .nav-link.active.order-tab-open { background: #dbeafe; border-color: #1b84ff; }
+.order-status-tabs .nav-link.active.order-tab-draft { background: #eef2f7; border-color: #64748b; }
+.order-status-tabs .nav-link.active.order-tab-belum_bayar { background: #ffefc2; border-color: #f59e0b; }
+.order-status-tabs .nav-link.active.order-tab-selesai { background: #d7f7e5; border-color: #12a150; }
 .order-table.dataTable {
     border: 1px solid #dfe5ef;
     border-radius: 12px;
@@ -252,6 +273,7 @@
 }
 .order-table {
     margin-bottom: 0 !important;
+    min-width: 900px;
 }
 .order-stat-grid {
     display: grid;
@@ -268,6 +290,45 @@
     }
 }
 @media (max-width: 575.98px) {
+    .order-status-tabs {
+        display: grid;
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+        gap: 7px;
+        border-bottom: 0;
+        padding-bottom: 10px;
+    }
+    .order-status-tabs .nav-item {
+        min-width: 0;
+    }
+    .nav.nav-tabs.order-status-tabs .nav-link {
+        width: 100%;
+        min-height: 40px;
+        min-width: 0;
+        padding: .6rem .85rem !important;
+        border: 1px solid #e4e8f0;
+        border-radius: 8px;
+        margin-right: 0;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        overflow: hidden;
+        font-size: 11px;
+        text-align: center;
+    }
+    .order-status-tabs .nav-link.active {
+        box-shadow: 0 6px 14px rgba(15, 23, 42, .08);
+    }
+    .order-status-tabs .nav-link i {
+        margin-right: .3rem !important;
+        flex: 0 0 auto;
+    }
+    .order-status-tabs .nav-link > span:not(.badge) {
+        min-width: 0;
+    }
+    .order-status-tabs .badge {
+        flex: 0 0 auto;
+        margin-left: .3rem !important;
+    }
     .order-stat-grid {
         grid-template-columns: 1fr;
     }
@@ -291,7 +352,7 @@ $(document).ready(function() {
         var status = this.dataset.status;
         tables[status] = $(this).DataTable({
             fixedHeader: { header: true },
-            dom: "<'d-none'B><'row'<'col-sm-12'tr>><'row mt-3'<'col-sm-12 col-md-5 d-flex align-items-center'i><'col-sm-12 col-md-7 d-flex justify-content-end'p>>",
+            dom: "<'d-none'B><'gh-table-scroll'tr><'row mt-3'<'col-sm-12 col-md-5 d-flex align-items-center'i><'col-sm-12 col-md-7 d-flex justify-content-end'p>>",
             buttons: [{ extend: 'excelHtml5', title: 'Order Management - ' + status + ' - Garasi Hobby', exportOptions: { columns: [0,1,2,3,4,5,6] } }],
             ordering: false,
             pageLength: 10,

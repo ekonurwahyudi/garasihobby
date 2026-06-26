@@ -12,7 +12,7 @@
         {{-- Mobile logo --}}
         <div class="d-flex align-items-center flex-grow-1 flex-lg-grow-0">
             <a href="{{ route('dashboard') }}" class="d-lg-none">
-                <img src="{{ asset('assets/media/logos.png') }}" alt="Garasi Hobby" class="brand-logo-img brand-logo-img-mobile" />
+                <img src="{{ asset('assets/media/logos.png') }}" alt="Garasi Hobby" class="brand-logo-img brand-logo-img-mobile" style="height: 23px;"/>
             </a>
         </div>
 

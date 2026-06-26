@@ -54,6 +54,73 @@
         .app-content .table-responsive {
             border-radius: 12px;
         }
+        .app-content .gh-table-scroll {
+            width: 100%;
+            overflow-x: auto;
+            -webkit-overflow-scrolling: touch;
+        }
+        @media (max-width: 767.98px) {
+            .app-content .gh-table-scroll > table,
+            .app-content .table-responsive > table {
+                min-width: 760px;
+            }
+        }
+        #kt_app_toolbar_container {
+            gap: 12px;
+        }
+        #kt_app_toolbar .gh-toolbar-actions {
+            flex-wrap: wrap;
+            justify-content: flex-end;
+            min-width: 0;
+            max-width: 100%;
+        }
+        #kt_app_toolbar .gh-toolbar-actions .btn.btn-sm {
+            min-height: 38px;
+            padding: .55rem .85rem !important;
+            border-radius: 10px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: .45rem;
+            line-height: 1.2;
+            white-space: nowrap;
+        }
+        #kt_app_toolbar .gh-toolbar-actions .btn.btn-sm i {
+            flex: 0 0 auto;
+        }
+        #kt_app_toolbar .gh-toolbar-actions .btn.btn-sm span {
+            min-width: 0;
+        }
+        @media (max-width: 991.98px) {
+            #kt_app_toolbar_container {
+                flex-wrap: wrap;
+                align-items: flex-start;
+            }
+            #kt_app_toolbar_container .page-title {
+                flex: 1 1 220px;
+                min-width: 0;
+            }
+            #kt_app_toolbar .gh-toolbar-actions {
+                flex: 1 1 100%;
+                width: 100%;
+                justify-content: flex-start;
+            }
+        }
+        @media (max-width: 575.98px) {
+            #kt_app_toolbar .gh-toolbar-actions {
+                display: grid !important;
+                grid-template-columns: repeat(2, minmax(0, 1fr));
+                gap: 8px !important;
+            }
+            #kt_app_toolbar .gh-toolbar-actions .btn.btn-sm,
+            #kt_app_toolbar .gh-toolbar-actions > .btn.btn-sm {
+                width: 100%;
+                min-height: 42px;
+                padding: .55rem .65rem !important;
+                white-space: normal;
+                text-align: center;
+            }
+        }
         .app-content .table:not(.table-borderless) {
             margin-bottom: 0;
             color: #17213b;
@@ -653,7 +720,7 @@
                                         </ul>
                                     @endif
                                 </div>
-                                <div class="d-flex align-items-center gap-2 gap-lg-3">
+                                <div class="gh-toolbar-actions d-flex align-items-center gap-2 gap-lg-3">
                                     @yield('toolbar_actions')
                                 </div>
                             </div>
@@ -771,7 +838,7 @@
     <script>
         if (window.jQuery && $.fn.dataTable) {
             $.extend(true, $.fn.dataTable.defaults, {
-                dom: "<'d-none'B><'row'<'col-sm-12'tr>><'row mt-3'<'col-sm-12 col-md-5 d-flex align-items-center'i><'col-sm-12 col-md-7 d-flex justify-content-end'p>>",
+                dom: "<'d-none'B><'gh-table-scroll'tr><'row mt-3'<'col-sm-12 col-md-5 d-flex align-items-center'i><'col-sm-12 col-md-7 d-flex justify-content-end'p>>",
                 language: {
                     zeroRecords: 'Data tidak ditemukan',
                     info: 'Menampilkan _START_ - _END_ dari _TOTAL_ data',
@@ -784,6 +851,12 @@
                         previous: '<i class="ki-duotone ki-left fs-4"></i>'
                     }
                 }
+            });
+
+            $(document).on('init.dt', function (event, settings) {
+                var table = $(settings.nTable);
+                if (table.closest('.gh-table-scroll, .dataTables_scroll').length) return;
+                table.wrap('<div class="gh-table-scroll"></div>');
             });
         }
 
